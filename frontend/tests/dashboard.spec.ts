@@ -33,3 +33,9 @@ test("renders the engineering decisions workflow", async ({ page }) => {
   await expect(page.getByPlaceholder("Decision title")).toBeVisible();
   await expect(page.getByRole("button", { name: "Save decision" })).toBeVisible();
 });
+
+test("renders the pull request review history surface", async ({ page }) => {
+  await page.goto("/pull-requests");
+  await expect(page.getByRole("heading", { name: "Pull requests" })).toBeVisible();
+  await expect(page.getByText("Review repository changes, record evidence, and keep each workspace isolated.")).toBeVisible();
+});

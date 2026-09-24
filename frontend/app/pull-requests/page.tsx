@@ -7,6 +7,7 @@ import "./pull-requests.css";
 
 type Workspace = { id: string; name: string };
 type PullRequest = { id: string; repository: string; number: number; title: string; author: string; state: string; url: string; verificationStatus: string };
+type AiReview = { id: string; title: string; summary: string; requestedBy: string; createdAt: string; contextDigest: string };
 
 export default function PullRequestsPage() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -16,6 +17,7 @@ export default function PullRequestsPage() {
   const [verifying, setVerifying] = useState("");
   const [aiLoading, setAiLoading] = useState("");
   const [aiSummaries, setAiSummaries] = useState<Record<string, string>>({});
+  const [reviewHistory, setReviewHistory] = useState<AiReview[]>([]);
 
   useEffect(() => {
     fetch("/api/workspaces").then(response => response.ok ? response.json() : Promise.reject()).then((items: Workspace[]) => {
@@ -27,6 +29,7 @@ export default function PullRequestsPage() {
   useEffect(() => {
     if (!selected) return;
     fetch(`/api/workspaces/${selected}/pull-requests`).then(response => response.ok ? response.json() : Promise.reject()).then(setPullRequests).catch(() => setMessage("Unable to load pull requests. Sync GitHub first."));
+    fetch(`/api/workspaces/${selected}/ai/review-summaries`).then(response => response.ok ? response.json() : Promise.reject()).then(setReviewHistory).catch(() => setReviewHistory([]));
   }, [selected]);
 
   async function verify(id: string) {
@@ -50,9 +53,10 @@ export default function PullRequestsPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "AI summary unavailable");
       setAiSummaries(items => ({ ...items, [pr.id]: data.summary }));
+      setReviewHistory(items => [{ id: data.reviewId, title: pr.title, summary: data.summary, requestedBy: "You", createdAt: data.createdAt, contextDigest: "" }, ...items]);
     } catch (error) { setMessage(error instanceof Error ? error.message : "AI summary unavailable"); }
     finally { setAiLoading(""); }
   }
 
-  return <main className="prs-page"><div className="prs-top"><Link href="/">← Back to dashboard</Link><span>DevContext</span></div><section className="prs-card"><div className="prs-heading"><div><p className="eyebrow">Release verification</p><h1>Pull requests</h1><p className="muted">Review repository changes, record evidence, and keep each workspace isolated.</p></div><GitPullRequest size={30} /></div>{workspaces.length > 0 && <label className="workspace-select">Workspace<select value={selected} onChange={event => setSelected(event.target.value)}>{workspaces.map(workspace => <option key={workspace.id} value={workspace.id}>{workspace.name}</option>)}</select></label>}{message && <p className="prs-message" role="alert">{message}</p>}{pullRequests.length === 0 && !message && <p className="empty-state">No synced pull requests yet. Open Integrations and sync GitHub.</p>}<div className="pr-list">{pullRequests.map(pr => <article className="pr-row" key={pr.id}><div className="pr-icon">{pr.verificationStatus === "REVIEW_REQUIRED" ? <ShieldAlert size={20} /> : <CheckCircle2 size={20} />}</div><div className="pr-content"><strong>{pr.title}</strong><small>{pr.repository} · #{pr.number} · {pr.author}</small>{aiSummaries[pr.id] && <p className="ai-summary">{aiSummaries[pr.id]}</p>}</div><span className={`pr-status ${pr.verificationStatus.toLowerCase()}`}>{pr.verificationStatus.replace("_", " ")}</span><div className="pr-actions"><button onClick={() => verify(pr.id)} disabled={verifying === pr.id}>{verifying === pr.id ? "Checking…" : "Verify"}</button><button className="ai-button" onClick={() => generateSummary(pr)} disabled={aiLoading === pr.id}>{aiLoading === pr.id ? "Thinking…" : "AI review"}</button></div></article>)}</div></section></main>;
+  return <main className="prs-page"><div className="prs-top"><Link href="/">← Back to dashboard</Link><span>DevContext</span></div><section className="prs-card"><div className="prs-heading"><div><p className="eyebrow">Release verification</p><h1>Pull requests</h1><p className="muted">Review repository changes, record evidence, and keep each workspace isolated.</p></div><GitPullRequest size={30} /></div>{workspaces.length > 0 && <label className="workspace-select">Workspace<select value={selected} onChange={event => setSelected(event.target.value)}>{workspaces.map(workspace => <option key={workspace.id} value={workspace.id}>{workspace.name}</option>)}</select></label>}{message && <p className="prs-message" role="alert">{message}</p>}{pullRequests.length === 0 && !message && <p className="empty-state">No synced pull requests yet. Open Integrations and sync GitHub.</p>}<div className="pr-list">{pullRequests.map(pr => <article className="pr-row" key={pr.id}><div className="pr-icon">{pr.verificationStatus === "REVIEW_REQUIRED" ? <ShieldAlert size={20} /> : <CheckCircle2 size={20} />}</div><div className="pr-content"><strong>{pr.title}</strong><small>{pr.repository} · #{pr.number} · {pr.author}</small>{aiSummaries[pr.id] && <p className="ai-summary">{aiSummaries[pr.id]}</p>}</div><span className={`pr-status ${pr.verificationStatus.toLowerCase()}`}>{pr.verificationStatus.replace("_", " ")}</span><div className="pr-actions"><button onClick={() => verify(pr.id)} disabled={verifying === pr.id}>{verifying === pr.id ? "Checking…" : "Verify"}</button><button className="ai-button" onClick={() => generateSummary(pr)} disabled={aiLoading === pr.id}>{aiLoading === pr.id ? "Thinking…" : "AI review"}</button></div></article>)}</div>{reviewHistory.length > 0 && <section className="review-history"><div className="review-history-heading"><h2>AI review history</h2><small>Persisted workspace evidence</small></div>{reviewHistory.slice(0, 5).map(review => <article key={review.id}><strong>{review.title}</strong><small>{new Date(review.createdAt).toLocaleString()} · {review.requestedBy}</small><p>{review.summary}</p></article>)}</section>}</section></main>;
 }
