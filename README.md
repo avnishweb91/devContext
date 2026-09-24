@@ -42,6 +42,8 @@ Create a Vercel project from this repository and set **Root Directory** to `fron
 BACKEND_URL=https://YOUR-RAILWAY-BACKEND.up.railway.app
 ```
 
+The value must include the protocol (`https://`). Do not enter only the hostname.
+
 ### Railway backend
 
 Create a Railway service from this repository and set **Root Directory** to `backend`. Railway will use `backend/Dockerfile`. Add:
