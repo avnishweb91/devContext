@@ -60,3 +60,9 @@ test("renders the incident management workflow", async ({ page }) => {
   await expect(page.getByPlaceholder("Incident title")).toBeVisible();
   await expect(page.getByRole("button", { name: "Create incident" })).toBeVisible();
 });
+
+test("renders the new workspace onboarding form", async ({ page }) => {
+  await page.goto("/onboarding");
+  await expect(page.getByRole("heading", { name: "Set up your engineering workspace" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Create workspace/ })).toBeVisible();
+});
