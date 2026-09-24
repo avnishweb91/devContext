@@ -52,7 +52,7 @@ public class GitHubIntegrationController {
         access.requireMember(workspaceId, authentication);
         authorizedClient(authentication);
         GitHubSyncJob job = syncService.queue(workspaceId, authentication.getName());
-        return new SyncResult(job.getId(), 0, 0, job.getStatus());
+        return new SyncResult(job.getId(), 0, 0, job.getStatus(), job.getErrorMessage());
     }
 
     @GetMapping("/workspaces/{workspaceId}/sync-jobs/{jobId}")
@@ -60,7 +60,7 @@ public class GitHubIntegrationController {
         access.requireMember(workspaceId, authentication);
         GitHubSyncJob job = jobs.findById(jobId).filter(candidate -> candidate.getWorkspaceId().equals(workspaceId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sync job not found"));
-        return new SyncResult(job.getId(), job.getRepositories(), job.getPullRequests(), job.getStatus());
+        return new SyncResult(job.getId(), job.getRepositories(), job.getPullRequests(), job.getStatus(), job.getErrorMessage());
     }
 
     @PostMapping("/workspaces/{workspaceId}/sync-jobs/{jobId}/retry")
@@ -68,7 +68,7 @@ public class GitHubIntegrationController {
         access.requireMember(workspaceId, authentication);
         authorizedClient(authentication);
         GitHubSyncJob job = syncService.retry(workspaceId, jobId, authentication.getName());
-        return new SyncResult(job.getId(), 0, 0, job.getStatus());
+        return new SyncResult(job.getId(), 0, 0, job.getStatus(), job.getErrorMessage());
     }
 
     private OAuth2AuthorizedClient authorizedClient(Authentication authentication) {
@@ -83,5 +83,5 @@ public class GitHubIntegrationController {
     }
 
     public record RepositorySummary(long id, String name, String fullName, boolean privateRepository, String url) {}
-    public record SyncResult(UUID jobId, int repositories, int pullRequests, String status) {}
+    public record SyncResult(UUID jobId, int repositories, int pullRequests, String status, String errorMessage) {}
 }
