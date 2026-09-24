@@ -15,6 +15,7 @@
 - [ ] AI provider absence returns a safe configuration error; provider failures do not leak secrets.
 - [ ] AI review history is visible only within the requesting workspace and stores a context digest rather than raw prompt context.
 - [ ] `/actuator/health` and `/actuator/prometheus` are reachable according to the monitoring policy.
+- [ ] `scripts/production-smoke.sh` passes against the deployed frontend and backend.
 
 ## Beta gate
 

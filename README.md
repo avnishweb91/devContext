@@ -121,3 +121,11 @@ Jira sync imports accessible projects and Slack sync imports active channels as 
 ### Release checklist
 
 Before alpha, run `mvn test`, `npm run build`, and `npm run test:e2e`; verify OAuth callbacks, Flyway migrations, workspace isolation, invitation acceptance, webhook signatures, and health probes in staging. Before beta, complete a real-company pilot, restore/rollback drill, security review, provider failure tests, and monitored error-rate review. Do not enable production AI or provider credentials until secrets are stored in the deployment secret manager.
+
+After deploying both services, run the lightweight availability check from the repository root:
+
+```bash
+BACKEND_URL=https://YOUR-RAILWAY-BACKEND.up.railway.app \
+FRONTEND_URL=https://YOUR-VERCEL-DOMAIN.vercel.app \
+./scripts/production-smoke.sh
+```
