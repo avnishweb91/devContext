@@ -26,3 +26,10 @@ test("renders the invite acceptance workflow", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Accept your invitation" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Accept invitation" })).toBeVisible();
 });
+
+test("renders the engineering decisions workflow", async ({ page }) => {
+  await page.goto("/decisions");
+  await expect(page.getByRole("heading", { name: "Decisions your team can trust" })).toBeVisible();
+  await expect(page.getByPlaceholder("Decision title")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save decision" })).toBeVisible();
+});
