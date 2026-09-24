@@ -15,3 +15,14 @@ test("opens pull request verification evidence", async ({ page }) => {
   await expect(page.getByText("GitHub pull request")).toBeVisible();
 });
 
+test("renders the team invitation workflow", async ({ page }) => {
+  await page.goto("/team");
+  await expect(page.getByRole("heading", { name: "Invite your team" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Create invitation" })).toBeVisible();
+});
+
+test("renders the invite acceptance workflow", async ({ page }) => {
+  await page.goto("/accept-invite?token=test-token");
+  await expect(page.getByRole("heading", { name: "Accept your invitation" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Accept invitation" })).toBeVisible();
+});
