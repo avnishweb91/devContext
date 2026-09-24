@@ -4,6 +4,23 @@ CREATE TABLE IF NOT EXISTS workspaces (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS app_users (
+    id UUID PRIMARY KEY,
+    email VARCHAR(320) NOT NULL UNIQUE,
+    display_name VARCHAR(180) NOT NULL,
+    identity_provider VARCHAR(40),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS workspace_memberships (
+    id UUID PRIMARY KEY,
+    workspace_id UUID NOT NULL REFERENCES workspaces(id),
+    user_id UUID NOT NULL REFERENCES app_users(id),
+    role VARCHAR(40) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(workspace_id, user_id)
+);
+
 CREATE TABLE IF NOT EXISTS integrations (
     id UUID PRIMARY KEY,
     workspace_id UUID NOT NULL REFERENCES workspaces(id),
@@ -35,4 +52,4 @@ CREATE TABLE IF NOT EXISTS verification_runs (
 
 CREATE INDEX IF NOT EXISTS idx_memories_workspace ON engineering_memories(workspace_id);
 CREATE INDEX IF NOT EXISTS idx_verification_workspace ON verification_runs(workspace_id);
-
+CREATE INDEX IF NOT EXISTS idx_memberships_user ON workspace_memberships(user_id);

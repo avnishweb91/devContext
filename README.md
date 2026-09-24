@@ -73,3 +73,5 @@ FRONTEND_ORIGIN=https://YOUR-VERCEL-DOMAIN.vercel.app
 ```
 
 The backend health check is `/actuator/health`.
+
+Set `SPRING_PROFILES_ACTIVE=prod` on Railway. Local development uses the default H2 profile; production uses PostgreSQL and Flyway validation.
