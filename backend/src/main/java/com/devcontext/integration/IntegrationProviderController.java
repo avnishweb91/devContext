@@ -6,6 +6,13 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.PathVariable;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.util.Set;
+import com.devcontext.workspace.WorkspaceAccessService;
 
 import java.util.List;
 
@@ -13,9 +20,26 @@ import java.util.List;
 @RequestMapping("/api/integrations/providers")
 public class IntegrationProviderController {
     private final ObjectProvider<ClientRegistrationRepository> registrations;
+    private final WorkspaceAccessService access;
 
-    public IntegrationProviderController(ObjectProvider<ClientRegistrationRepository> registrations) {
+    public IntegrationProviderController(ObjectProvider<ClientRegistrationRepository> registrations, WorkspaceAccessService access) {
         this.registrations = registrations;
+        this.access = access;
+    }
+
+    @GetMapping("/{provider}/connect")
+    public void connect(@PathVariable String provider, Authentication authentication, HttpServletRequest request,
+                        HttpServletResponse response) throws IOException {
+        access.identityEmail(authentication);
+        String id = provider.toLowerCase(java.util.Locale.ROOT);
+        if (!Set.of("jira", "slack").contains(id) || registrations.getIfAvailable() == null
+                || registrations.getIfAvailable().findByRegistrationId(id) == null) {
+            response.sendError(404, "Integration provider is not configured");
+            return;
+        }
+        String email = access.identityEmail(authentication);
+        request.getSession().setAttribute("devcontext.oauth.link.email", email);
+        response.sendRedirect("/oauth2/authorization/" + id);
     }
 
     @GetMapping
@@ -30,8 +54,11 @@ public class IntegrationProviderController {
     }
 
     private ProviderSummary summary(ClientRegistration registration) {
+        String authorizationPath = "github".equals(registration.getRegistrationId())
+                ? "/oauth2/authorization/github"
+                : "/api/integrations/providers/" + registration.getRegistrationId() + "/connect";
         return new ProviderSummary(registration.getRegistrationId(), registration.getClientName(),
-                "/oauth2/authorization/" + registration.getRegistrationId());
+                authorizationPath);
     }
 
     public record ProviderSummary(String id, String name, String authorizationPath) {}

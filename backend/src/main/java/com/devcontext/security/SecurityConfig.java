@@ -12,9 +12,11 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
     private final GitHubOAuth2UserService githubUserService;
+    private final OAuth2LinkSuccessHandler oauth2LinkSuccessHandler;
 
-    public SecurityConfig(GitHubOAuth2UserService githubUserService) {
+    public SecurityConfig(GitHubOAuth2UserService githubUserService, OAuth2LinkSuccessHandler oauth2LinkSuccessHandler) {
         this.githubUserService = githubUserService;
+        this.oauth2LinkSuccessHandler = oauth2LinkSuccessHandler;
     }
 
     @Value("${devcontext.security.enabled:false}")
@@ -39,7 +41,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .oauth2Login(login -> login
                         .userInfoEndpoint(userInfo -> userInfo.userService(githubUserService))
-                        .defaultSuccessUrl(frontendOrigin + "/onboarding", true))
+                        .successHandler(oauth2LinkSuccessHandler))
                 .logout(logout -> logout.logoutSuccessUrl(frontendOrigin))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
         return http.build();

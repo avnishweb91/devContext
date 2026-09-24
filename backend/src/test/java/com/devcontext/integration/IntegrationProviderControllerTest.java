@@ -5,6 +5,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import com.devcontext.workspace.WorkspaceAccessService;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ class IntegrationProviderControllerTest {
         ObjectProvider<ClientRegistrationRepository> provider = mock(ObjectProvider.class);
         when(provider.getIfAvailable()).thenReturn(repository);
 
-        List<IntegrationProviderController.ProviderSummary> result = new IntegrationProviderController(provider).providers();
+        List<IntegrationProviderController.ProviderSummary> result = new IntegrationProviderController(provider, mock(WorkspaceAccessService.class)).providers();
 
         assertThat(result).singleElement().satisfies(item -> {
             assertThat(item.id()).isEqualTo("github");
