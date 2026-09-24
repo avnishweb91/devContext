@@ -42,6 +42,9 @@ public class OAuth2LinkSuccessHandler implements AuthenticationSuccessHandler {
         String registrationId = authentication instanceof OAuth2AuthenticationToken oauth
                 ? oauth.getAuthorizedClientRegistrationId() : "github";
         String linkedEmail = (String) request.getSession().getAttribute(LINK_EMAIL);
+        if ("github".equals(registrationId)) {
+            request.getSession().removeAttribute(LINK_EMAIL);
+        }
         if (linkedEmail != null && !"github".equals(registrationId)) {
             OAuth2AuthorizedClientService clientService = authorizedClients.getIfAvailable();
             ClientRegistrationRepository registrationRepository = registrations.getIfAvailable();

@@ -67,4 +67,19 @@ class OAuth2LinkSuccessHandlerTest {
         assertThat(request.getSession().getAttribute("devcontext.oauth.link.email")).isNull();
         verify(clientService).saveAuthorizedClient(any(OAuth2AuthorizedClient.class), any());
     }
+
+    @Test
+    void clearsStaleLinkMarkerWhenNormalGitHubLoginCompletes() throws Exception {
+        OAuth2User user = mock(OAuth2User.class);
+        OAuth2AuthenticationToken authentication = new OAuth2AuthenticationToken(user, List.of(), "github");
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.getSession().setAttribute("devcontext.oauth.link.email", "old@acme.test");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        new OAuth2LinkSuccessHandler(clients, repositories, "https://app.example")
+                .onAuthenticationSuccess(request, response, authentication);
+
+        assertThat(request.getSession().getAttribute("devcontext.oauth.link.email")).isNull();
+        assertThat(response.getRedirectedUrl()).isEqualTo("https://app.example/onboarding");
+    }
 }
