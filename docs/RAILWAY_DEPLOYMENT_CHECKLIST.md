@@ -25,6 +25,10 @@ DATABASE_USERNAME=USER
 DATABASE_PASSWORD=PASSWORD
 ```
 
+The Docker entrypoint also accepts Railway's `DATABASE_URL` when it is a
+`postgres://` or `postgresql://` URL and converts it to the JDBC form required
+by Spring Boot.
+
 GitHub sign-in is required for onboarding:
 
 ```text
