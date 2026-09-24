@@ -30,10 +30,9 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health", "/actuator/info", "/oauth2/**", "/login/**").permitAll()
                         .anyRequest().authenticated())
-                .oauth2Login(login -> login.defaultSuccessUrl(frontendOrigin, true))
+                .oauth2Login(login -> login.defaultSuccessUrl(frontendOrigin + "/onboarding", true))
                 .logout(logout -> logout.logoutSuccessUrl(frontendOrigin))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
         return http.build();
     }
 }
-
