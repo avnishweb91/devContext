@@ -11,6 +11,12 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
+    private final GitHubOAuth2UserService githubUserService;
+
+    public SecurityConfig(GitHubOAuth2UserService githubUserService) {
+        this.githubUserService = githubUserService;
+    }
+
     @Value("${devcontext.security.enabled:false}")
     private boolean securityEnabled;
 
@@ -31,7 +37,9 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health", "/actuator/info", "/oauth2/**", "/login/**", "/api/webhooks/**").permitAll()
                         .anyRequest().authenticated())
-                .oauth2Login(login -> login.defaultSuccessUrl(frontendOrigin + "/onboarding", true))
+                .oauth2Login(login -> login
+                        .userInfoEndpoint(userInfo -> userInfo.userService(githubUserService))
+                        .defaultSuccessUrl(frontendOrigin + "/onboarding", true))
                 .logout(logout -> logout.logoutSuccessUrl(frontendOrigin))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
         return http.build();
