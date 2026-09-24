@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: devcontext
+      POSTGRES_USER: devcontext
+      POSTGRES_PASSWORD: devcontext
+    ports:
+      - "5432:5432"
+    volumes:
+      - devcontext-postgres:/var/lib/postgresql/data
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+volumes:
+  devcontext-postgres:
+

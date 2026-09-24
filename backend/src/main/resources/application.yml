@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: devcontext-api
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/devcontext}
+    username: ${DATABASE_USERNAME:devcontext}
+    password: ${DATABASE_PASSWORD:devcontext}
+    driver-class-name: org.postgresql.Driver
+server:
+  port: 8080
+  forward-headers-strategy: framework
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+devcontext:
+  frontend-origin: ${FRONTEND_ORIGIN:http://localhost:3000}
