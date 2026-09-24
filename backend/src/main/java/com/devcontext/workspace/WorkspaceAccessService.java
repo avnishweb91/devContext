@@ -28,6 +28,16 @@ public class WorkspaceAccessService {
         return user;
     }
 
+    public AppUser requireAdmin(UUID workspaceId, Authentication authentication) {
+        AppUser user = currentUser(authentication);
+        WorkspaceMembership membership = memberships.findByWorkspaceIdAndUserId(workspaceId, user.getId())
+                .orElseThrow(() -> new ResponseStatusException(FORBIDDEN, "User is not a member of this workspace"));
+        if (membership.getRole() != WorkspaceMembership.Role.OWNER && membership.getRole() != WorkspaceMembership.Role.ADMIN) {
+            throw new ResponseStatusException(FORBIDDEN, "Workspace administrator access required");
+        }
+        return user;
+    }
+
     public AppUser currentUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(UNAUTHORIZED, "Authentication required");
