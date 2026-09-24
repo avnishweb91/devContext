@@ -41,4 +41,3 @@ public class ConnectedRepository {
     public String getUrl() { return url; }
     public Instant getLastSyncedAt() { return lastSyncedAt; }
 }
-

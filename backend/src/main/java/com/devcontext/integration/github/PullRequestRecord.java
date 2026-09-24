@@ -43,5 +43,9 @@ public class PullRequestRecord {
     public String getUrl() { return url; }
     public String getVerificationStatus() { return verificationStatus; }
     public Instant getUpdatedAt() { return updatedAt; }
-}
 
+    public void markVerification(String status) {
+        this.verificationStatus = status;
+        this.updatedAt = Instant.now();
+    }
+}
