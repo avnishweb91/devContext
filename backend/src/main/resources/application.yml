@@ -22,5 +22,9 @@ management:
         include: health,info
 devcontext:
   frontend-origin: ${FRONTEND_ORIGIN:http://localhost:3000}
+  ai:
+    api-key: ${AI_API_KEY:}
+    model: ${AI_MODEL:gpt-4o-mini}
+    endpoint: ${AI_API_ENDPOINT:https://api.openai.com/v1/chat/completions}
   security:
     enabled: ${SECURITY_ENABLED:false}
