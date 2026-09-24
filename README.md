@@ -78,6 +78,8 @@ The value must include the protocol (`https://`). Do not enter only the hostname
 
 ### Railway backend
 
+For the complete service, database, health-check, and OAuth setup, follow [`docs/RAILWAY_DEPLOYMENT_CHECKLIST.md`](docs/RAILWAY_DEPLOYMENT_CHECKLIST.md).
+
 Create a Railway service from this repository and set **Root Directory** to `backend`. Railway will use `backend/Dockerfile`. Add:
 
 ```text
