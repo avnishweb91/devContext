@@ -29,7 +29,10 @@ export default function Home() {
   const [workspaces, setWorkspaces] = useState<WorkspaceOption[]>([]);
   useEffect(() => {
     fetch("/api/workspaces")
-      .then(() => setApiConnected(true))
+      .then(response => {
+        if (!response.ok) throw new Error("API request failed");
+        setApiConnected(true);
+      })
       .catch(() => setApiConnected(false));
     fetch("/api/auth/me")
       .then(response => response.json())
