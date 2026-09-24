@@ -29,24 +29,24 @@ export default function Home() {
   const [liveWorkspaceId, setLiveWorkspaceId] = useState("");
   const [workspaces, setWorkspaces] = useState<WorkspaceOption[]>([]);
   useEffect(() => {
-    fetch("/api/workspaces")
+    apiFetch("/api/workspaces")
       .then(response => {
         if (!response.ok) throw new Error("API request failed");
         setApiConnected(true);
       })
       .catch(() => setApiConnected(false));
-    fetch("/api/auth/me")
+    apiFetch("/api/auth/me")
       .then(response => response.json())
       .then(user => setAuthState(user.authenticated ? "authenticated" : "anonymous"))
       .catch(() => setAuthState("anonymous"));
-    fetch("/api/workspaces")
+    apiFetch("/api/workspaces")
       .then(response => response.ok ? response.json() : Promise.reject())
       .then((items: WorkspaceOption[]) => { setWorkspaces(items); setLiveWorkspaceId(current => current || items[0]?.id || ""); })
       .catch(() => { setWorkspaces([]); });
   }, []);
   useEffect(() => {
     if (!liveWorkspaceId) return;
-    fetch(`/api/workspaces/${liveWorkspaceId}/dashboard`)
+    apiFetch(`/api/workspaces/${liveWorkspaceId}/dashboard`)
       .then(response => response.ok ? response.json() : Promise.reject())
       .then(data => { setLiveMetrics(data.metrics); setLivePullRequests(data.pullRequests || []); setLiveMemories(data.memories || []); })
       .catch(() => { setLiveMetrics(null); setLivePullRequests([]); setLiveMemories([]); });

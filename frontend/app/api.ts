@@ -23,5 +23,16 @@ export async function apiFetch(input: RequestInfo | URL, init: RequestInit = {})
   const headers = new Headers(init.headers);
   const token = cookieValue("XSRF-TOKEN");
   if (token) headers.set("X-XSRF-TOKEN", token);
-  return fetch(input, { ...init, headers, credentials: "include" });
+  const controller = init.signal ? null : new AbortController();
+  const timeout = controller ? window.setTimeout(() => controller.abort(), 10000) : null;
+  try {
+    return await fetch(input, {
+      ...init,
+      headers,
+      credentials: "include",
+      ...(controller ? { signal: controller.signal } : {}),
+    });
+  } finally {
+    if (timeout !== null) window.clearTimeout(timeout);
+  }
 }
