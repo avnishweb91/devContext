@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.util.Set;
 import com.devcontext.workspace.WorkspaceAccessService;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/integrations/providers")
@@ -28,8 +30,9 @@ public class IntegrationProviderController {
     }
 
     @GetMapping("/{provider}/connect")
-    public void connect(@PathVariable String provider, Authentication authentication, HttpServletRequest request,
+    public void connect(@PathVariable String provider, @RequestParam UUID workspaceId, Authentication authentication, HttpServletRequest request,
                         HttpServletResponse response) throws IOException {
+        access.requireAdmin(workspaceId, authentication);
         String email = access.identityEmail(authentication);
         String id = provider.toLowerCase(java.util.Locale.ROOT);
         if (!Set.of("jira", "slack").contains(id) || registrations.getIfAvailable() == null

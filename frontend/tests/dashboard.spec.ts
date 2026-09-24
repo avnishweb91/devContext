@@ -75,8 +75,8 @@ test("uses identity-preserving links for Jira and Slack", async ({ page }) => {
     { id: "slack", name: "Slack", authorizationPath: "/api/integrations/providers/slack/connect" },
   ]) }));
   await page.goto("/integrations");
-  await expect(page.locator('a[href="/api/integrations/providers/jira/connect"]')).toBeVisible();
-  await expect(page.locator('a[href="/api/integrations/providers/slack/connect"]')).toBeVisible();
+  await expect(page.locator('a[href="/api/integrations/providers/jira/connect?workspaceId=workspace-1"]')).toBeVisible();
+  await expect(page.locator('a[href="/api/integrations/providers/slack/connect?workspaceId=workspace-1"]')).toBeVisible();
 });
 
 test("shows the API as offline when the backend proxy fails", async ({ page }) => {

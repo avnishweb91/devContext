@@ -11,10 +11,12 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 
@@ -53,10 +55,12 @@ class IntegrationProviderControllerTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        controller.connect("jira", new UsernamePasswordAuthenticationToken("owner@acme.test", "n/a"), request, response);
+        UUID workspaceId = UUID.randomUUID();
+        controller.connect("jira", workspaceId, new UsernamePasswordAuthenticationToken("owner@acme.test", "n/a"), request, response);
 
         assertThat(request.getSession().getAttribute("devcontext.oauth.link.email")).isEqualTo("owner@acme.test");
         assertThat(response.getRedirectedUrl()).isEqualTo("/oauth2/authorization/jira");
         verify(access).identityEmail(any());
+        verify(access).requireAdmin(eq(workspaceId), any());
     }
 }
