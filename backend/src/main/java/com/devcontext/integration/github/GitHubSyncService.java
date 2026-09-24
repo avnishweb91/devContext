@@ -2,6 +2,7 @@ package com.devcontext.integration.github;
 
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
@@ -21,7 +22,12 @@ public class GitHubSyncService {
         if (jobs.countByWorkspaceIdAndStatusIn(workspaceId, List.of("PENDING", "RUNNING")) > 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "A GitHub synchronization is already running for this workspace");
         }
-        GitHubSyncJob job = jobs.save(new GitHubSyncJob(workspaceId, principalName));
+        GitHubSyncJob job;
+        try {
+            job = jobs.saveAndFlush(new GitHubSyncJob(workspaceId, principalName));
+        } catch (DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A GitHub synchronization is already running for this workspace");
+        }
         worker.synchronize(job.getId(), workspaceId, principalName);
         return job;
     }

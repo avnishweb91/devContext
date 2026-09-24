@@ -22,13 +22,13 @@ class GitHubSyncServiceTest {
     void persistsJobBeforeDispatchingBackgroundWork() {
         UUID workspaceId = UUID.randomUUID();
         GitHubSyncJob saved = new GitHubSyncJob(workspaceId, "github-user");
-        when(jobs.save(any(GitHubSyncJob.class))).thenReturn(saved);
+        when(jobs.saveAndFlush(any(GitHubSyncJob.class))).thenReturn(saved);
         GitHubSyncService service = new GitHubSyncService(jobs, worker);
 
         GitHubSyncJob result = service.queue(workspaceId, "github-user");
 
         assertThat(result.getStatus()).isEqualTo("PENDING");
-        verify(jobs).save(any(GitHubSyncJob.class));
+        verify(jobs).saveAndFlush(any(GitHubSyncJob.class));
         verify(worker).synchronize(result.getId(), workspaceId, "github-user");
     }
 
@@ -40,7 +40,7 @@ class GitHubSyncServiceTest {
         failed.fail("provider timeout");
         when(jobs.findById(failed.getId())).thenReturn(java.util.Optional.of(failed));
         GitHubSyncJob retry = new GitHubSyncJob(workspaceId, "github-user");
-        when(jobs.save(any(GitHubSyncJob.class))).thenReturn(retry);
+        when(jobs.saveAndFlush(any(GitHubSyncJob.class))).thenReturn(retry);
         GitHubSyncService service = new GitHubSyncService(jobs, worker);
 
         GitHubSyncJob result = service.retry(workspaceId, failed.getId(), "github-user");
