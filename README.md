@@ -79,6 +79,8 @@ The backend health check is `/actuator/health`.
 
 Set `SPRING_PROFILES_ACTIVE=prod` on Railway. Local development uses the default H2 profile; production uses PostgreSQL and Flyway validation.
 
+When Railway provides its PostgreSQL service variables (`PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, and `PGPASSWORD`), the production profile uses them directly. If you use a separate database provider, set `DATABASE_JDBC_URL` to a full `jdbc:postgresql://...` URL and optionally set `DATABASE_USERNAME` and `DATABASE_PASSWORD`.
+
 For GitHub OAuth, register this callback URL in the GitHub OAuth App:
 
 ```text

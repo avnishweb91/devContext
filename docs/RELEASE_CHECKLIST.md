@@ -6,6 +6,7 @@
 - [ ] Frontend `npm run build` passes.
 - [ ] Playwright suite passes against the deployed preview.
 - [ ] Production profile starts against a clean PostgreSQL database and all Flyway migrations complete.
+- [ ] Railway database variables resolve to a JDBC PostgreSQL connection and the service passes its health check after migration.
 - [ ] OAuth callbacks work for every enabled provider.
 - [ ] Jira project and Slack channel sync succeeds with a connected staging account and repeated sync is idempotent.
 - [ ] Workspace A cannot read workspace B data.

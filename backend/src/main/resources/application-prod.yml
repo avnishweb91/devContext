@@ -8,9 +8,9 @@ spring:
             client-secret: ${GITHUB_CLIENT_SECRET}
             scope: read:user,user:email,repo
   datasource:
-    url: ${DATABASE_URL}
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
+    url: ${DATABASE_JDBC_URL:jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:devcontext}}
+    username: ${DATABASE_USERNAME:${PGUSER:devcontext}}
+    password: ${DATABASE_PASSWORD:${PGPASSWORD:}}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
