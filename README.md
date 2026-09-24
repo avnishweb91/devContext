@@ -92,10 +92,10 @@ Set `SPRING_PROFILES_ACTIVE=prod` on Railway. Local development uses the default
 
 When Railway provides its PostgreSQL service variables (`PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, and `PGPASSWORD`), the production profile uses them directly. If you use a separate database provider, set `DATABASE_JDBC_URL` to a full `jdbc:postgresql://...` URL and optionally set `DATABASE_USERNAME` and `DATABASE_PASSWORD`.
 
-For GitHub OAuth, register this callback URL in the GitHub OAuth App. OAuth is proxied through Vercel, but Spring completes the callback on the Railway backend:
+For GitHub OAuth, register this callback URL in the GitHub OAuth App. The callback must return through Vercel so the browser keeps the Spring session cookie; Vercel then proxies it to Railway:
 
 ```text
-https://YOUR-RAILWAY-BACKEND.up.railway.app/login/oauth2/code/github
+https://YOUR-VERCEL-DOMAIN.vercel.app/login/oauth2/code/github
 ```
 
 Jira and Slack OAuth are opt-in profiles. Add `jira` and/or `slack` to `SPRING_PROFILES_ACTIVE`, set the matching client credentials, and register the same callback pattern with the provider:
