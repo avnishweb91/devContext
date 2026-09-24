@@ -33,7 +33,7 @@ class WorkspaceIntegrationControllerTest {
 
         assertThat(result.provider()).isEqualTo("JIRA");
         assertThat(result.status()).isEqualTo("CONNECTED");
-        verify(access).requireMember(eq(workspaceId), any());
+        verify(access).requireAdmin(eq(workspaceId), any());
         verify(integrations).save(any(WorkspaceIntegration.class));
     }
 }

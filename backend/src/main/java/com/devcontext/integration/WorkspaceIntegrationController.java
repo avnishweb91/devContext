@@ -44,7 +44,7 @@ public class WorkspaceIntegrationController {
     @ResponseStatus(HttpStatus.CREATED)
     public IntegrationSummary connect(@PathVariable UUID workspaceId, @Valid @RequestBody ConnectRequest request,
                                       Authentication authentication) {
-        access.requireMember(workspaceId, authentication);
+        access.requireAdmin(workspaceId, authentication);
         String provider = request.provider().trim().toUpperCase(Locale.ROOT);
         if (!SUPPORTED_PROVIDERS.contains(provider)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported integration provider");
