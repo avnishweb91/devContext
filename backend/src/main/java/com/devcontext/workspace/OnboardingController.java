@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
@@ -17,13 +19,27 @@ import java.util.UUID;
 @RequestMapping("/api/onboarding")
 public class OnboardingController {
     private final OnboardingService service;
+    private final WorkspaceAccessService access;
 
-    public OnboardingController(OnboardingService service) { this.service = service; }
+    public OnboardingController(OnboardingService service, WorkspaceAccessService access) {
+        this.service = service;
+        this.access = access;
+    }
 
     @PostMapping("/workspaces")
     @ResponseStatus(HttpStatus.CREATED)
-    public OnboardingResponse createWorkspace(@Valid @RequestBody CreateWorkspaceRequest request) {
-        return service.createWorkspace(request.companyName(), request.ownerName(), request.ownerEmail());
+    public OnboardingResponse createWorkspace(@Valid @RequestBody CreateWorkspaceRequest request, Authentication authentication) {
+        String ownerEmail = request.ownerEmail();
+        if (authentication != null && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getName())) {
+            String authenticatedEmail = access.identityEmail(authentication);
+            if (!authenticatedEmail.equalsIgnoreCase(ownerEmail)) {
+                throw new ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN,
+                        "Owner email must match the signed-in identity");
+            }
+            ownerEmail = authenticatedEmail;
+        }
+        return service.createWorkspace(request.companyName(), request.ownerName(), ownerEmail);
     }
 
     public record CreateWorkspaceRequest(
@@ -33,4 +49,3 @@ public class OnboardingController {
 
     public record OnboardingResponse(UUID workspaceId, String companyName, UUID ownerId, String ownerEmail, String role) {}
 }
-

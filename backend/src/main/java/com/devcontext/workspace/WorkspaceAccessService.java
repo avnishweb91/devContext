@@ -32,14 +32,25 @@ public class WorkspaceAccessService {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(UNAUTHORIZED, "Authentication required");
         }
-        String email = authentication.getPrincipal() instanceof OAuth2User oauthUser
-                ? oauthUser.getAttribute("email")
-                : authentication.getName();
+        String email = identityEmail(authentication);
         if (email == null || email.isBlank()) {
             throw new ResponseStatusException(UNAUTHORIZED, "Authenticated identity has no email");
         }
         AppUser user = users.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResponseStatusException(FORBIDDEN, "User is not onboarded to this workspace"));
         return user;
+    }
+
+    public String identityEmail(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(UNAUTHORIZED, "Authentication required");
+        }
+        String email = authentication.getPrincipal() instanceof OAuth2User oauthUser
+                ? oauthUser.getAttribute("email")
+                : authentication.getName();
+        if (email == null || email.isBlank()) {
+            throw new ResponseStatusException(UNAUTHORIZED, "Authenticated identity has no email");
+        }
+        return email.trim();
     }
 }
