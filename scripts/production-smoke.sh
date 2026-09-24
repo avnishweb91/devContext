@@ -16,4 +16,13 @@ if [[ "$frontend_code" != "200" ]]; then
   exit 1
 fi
 
-echo "Production smoke checks passed: backend health and frontend availability."
+# The shell page can be served even when the Next.js rewrite cannot reach the
+# backend. Verify the browser-facing API path as well; anonymous users should
+# receive a valid unauthenticated response rather than a proxy error/timeout.
+auth_code="$(curl -sS -L -o /dev/null -w '%{http_code}' --max-time 15 "${frontend_url%/}/api/auth/me")"
+if [[ "$auth_code" != "200" ]]; then
+  echo "Frontend API proxy check failed: HTTP $auth_code" >&2
+  exit 1
+fi
+
+echo "Production smoke checks passed: backend health, frontend availability, and frontend API proxy."
