@@ -66,3 +66,15 @@ test("renders the new workspace onboarding form", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Set up your engineering workspace" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Create workspace/ })).toBeVisible();
 });
+
+test("uses identity-preserving links for Jira and Slack", async ({ page }) => {
+  await page.route("**/api/workspaces", route => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([{ id: "workspace-1", name: "Acme" }]) }));
+  await page.route("**/api/integrations/providers", route => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([
+    { id: "github", name: "GitHub", authorizationPath: "/oauth2/authorization/github" },
+    { id: "jira", name: "Jira", authorizationPath: "/api/integrations/providers/jira/connect" },
+    { id: "slack", name: "Slack", authorizationPath: "/api/integrations/providers/slack/connect" },
+  ]) }));
+  await page.goto("/integrations");
+  await expect(page.locator('a[href="/api/integrations/providers/jira/connect"]')).toBeVisible();
+  await expect(page.locator('a[href="/api/integrations/providers/slack/connect"]')).toBeVisible();
+});
