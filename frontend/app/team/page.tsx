@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { CheckCircle2, Copy, Users } from "lucide-react";
 import Link from "next/link";
+import { apiFetch } from "../api";
 import "./team.css";
 
 type Workspace = { id: string; name: string };
@@ -18,7 +19,7 @@ export default function TeamPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch("/api/workspaces").then(response => response.ok ? response.json() : Promise.reject()).then((items: Workspace[]) => {
+    apiFetch("/api/workspaces").then(response => response.ok ? response.json() : Promise.reject()).then((items: Workspace[]) => {
       setWorkspaces(items); if (items[0]) setWorkspaceId(items[0].id);
     }).catch(() => setMessage("Sign in and create a workspace before inviting teammates."));
   }, []);
@@ -26,7 +27,7 @@ export default function TeamPage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSaving(true); setMessage(""); setInvite(null);
     try {
-      const response = await fetch(`/api/workspaces/${workspaceId}/invites`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, role }) });
+      const response = await apiFetch(`/api/workspaces/${workspaceId}/invites`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, role }) });
       const data = await response.json(); if (!response.ok) throw new Error(data.message || "Could not create invitation");
       setInvite(data); setEmail("");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Could not create invitation"); }

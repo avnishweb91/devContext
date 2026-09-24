@@ -37,7 +37,7 @@ public class DevContextApplication {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(java.util.List.of(frontendOrigin));
         configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "X-Request-ID"));
+        configuration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "X-Request-ID", "X-XSRF-TOKEN"));
         configuration.setExposedHeaders(java.util.List.of("X-Request-ID"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

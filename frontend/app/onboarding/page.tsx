@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { ArrowRight, Building2, CheckCircle2 } from "lucide-react";
+import { apiFetch } from "../api";
 import "./onboarding.css";
 
 export default function OnboardingPage() {
@@ -12,7 +13,7 @@ export default function OnboardingPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/workspaces")
+    apiFetch("/api/workspaces")
       .then(response => response.ok ? response.json() : Promise.reject())
       .then((items: { id: string }[]) => { if (items.length > 0) window.location.assign("/"); })
       .catch(() => undefined);
@@ -23,7 +24,7 @@ export default function OnboardingPage() {
     setSaving(true);
     setError("");
     try {
-      const response = await fetch("/api/onboarding/workspaces", {
+      const response = await apiFetch("/api/onboarding/workspaces", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ companyName, ownerName, ownerEmail }),

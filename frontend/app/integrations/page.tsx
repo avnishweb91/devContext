@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, Github, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import { apiFetch } from "../api";
 import "./integrations.css";
 
 type Workspace = { id: string; name: string };
@@ -21,27 +22,27 @@ export default function IntegrationsPage() {
   const [failedJob, setFailedJob] = useState<SyncResult | null>(null);
 
   useEffect(() => {
-    fetch("/api/workspaces").then(response => response.ok ? response.json() : Promise.reject()).then((items: Workspace[]) => {
+    apiFetch("/api/workspaces").then(response => response.ok ? response.json() : Promise.reject()).then((items: Workspace[]) => {
       setWorkspaces(items);
       if (items[0]) setSelected(items[0].id);
     }).catch(() => setMessage("Sign in with GitHub and create a workspace before connecting integrations."));
   }, []);
 
   useEffect(() => {
-    fetch("/api/integrations/providers").then(response => response.ok ? response.json() : Promise.reject()).then(setProviders).catch(() => setProviders([]));
+    apiFetch("/api/integrations/providers").then(response => response.ok ? response.json() : Promise.reject()).then(setProviders).catch(() => setProviders([]));
   }, []);
 
   async function syncGitHub() {
     if (!selected) return;
     setSyncing(true); setMessage(""); setResult(null); setFailedJob(null);
     try {
-      const response = await fetch(`/api/integrations/github/workspaces/${selected}/sync`, { method: "POST" });
+    const response = await apiFetch(`/api/integrations/github/workspaces/${selected}/sync`, { method: "POST" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "GitHub sync failed");
       let status = data as SyncResult;
       for (let attempt = 0; attempt < 30 && (status.status === "PENDING" || status.status === "RUNNING"); attempt++) {
         await new Promise(resolve => setTimeout(resolve, 1000));
-        const statusResponse = await fetch(`/api/integrations/github/workspaces/${selected}/sync-jobs/${status.jobId}`);
+        const statusResponse = await apiFetch(`/api/integrations/github/workspaces/${selected}/sync-jobs/${status.jobId}`);
         if (!statusResponse.ok) throw new Error("Unable to read sync status");
         status = await statusResponse.json();
       }
@@ -55,7 +56,7 @@ export default function IntegrationsPage() {
     if (!selected || !failedJob) return;
     setSyncing(true); setMessage("");
     try {
-      const response = await fetch(`/api/integrations/github/workspaces/${selected}/sync-jobs/${failedJob.jobId}/retry`, { method: "POST" });
+    const response = await apiFetch(`/api/integrations/github/workspaces/${selected}/sync-jobs/${failedJob.jobId}/retry`, { method: "POST" });
       const data = await response.json() as SyncResult & { message?: string };
       if (!response.ok) throw new Error(data.message || "Unable to retry GitHub synchronization");
       setFailedJob(null); setMessage("GitHub retry queued. Run sync again shortly to read its status.");
@@ -67,7 +68,7 @@ export default function IntegrationsPage() {
     if (!selected) return;
     setContextSyncing(provider); setMessage(""); setResult(null);
     try {
-      const response = await fetch(`/api/workspaces/${selected}/integrations/${provider}/sync`, { method: "POST" });
+    const response = await apiFetch(`/api/workspaces/${selected}/integrations/${provider}/sync`, { method: "POST" });
       const data = await response.json() as ContextSyncResult & { message?: string };
       if (!response.ok) throw new Error(data.message || `Unable to sync ${provider}`);
       setMessage(`${provider === "jira" ? "Jira" : "Slack"} imported ${data.importedMemories} context records.`);

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, GitPullRequest, ShieldAlert } from "lucide-react";
 import Link from "next/link";
+import { apiFetch } from "../api";
 import "./pull-requests.css";
 
 type Workspace = { id: string; name: string };
@@ -20,7 +21,7 @@ export default function PullRequestsPage() {
   const [reviewHistory, setReviewHistory] = useState<AiReview[]>([]);
 
   useEffect(() => {
-    fetch("/api/workspaces").then(response => response.ok ? response.json() : Promise.reject()).then((items: Workspace[]) => {
+    apiFetch("/api/workspaces").then(response => response.ok ? response.json() : Promise.reject()).then((items: Workspace[]) => {
       setWorkspaces(items);
       if (items[0]) setSelected(items[0].id);
     }).catch(() => setMessage("Sign in and create a workspace to view pull requests."));
@@ -28,14 +29,14 @@ export default function PullRequestsPage() {
 
   useEffect(() => {
     if (!selected) return;
-    fetch(`/api/workspaces/${selected}/pull-requests`).then(response => response.ok ? response.json() : Promise.reject()).then(setPullRequests).catch(() => setMessage("Unable to load pull requests. Sync GitHub first."));
-    fetch(`/api/workspaces/${selected}/ai/review-summaries`).then(response => response.ok ? response.json() : Promise.reject()).then(setReviewHistory).catch(() => setReviewHistory([]));
+    apiFetch(`/api/workspaces/${selected}/pull-requests`).then(response => response.ok ? response.json() : Promise.reject()).then(setPullRequests).catch(() => setMessage("Unable to load pull requests. Sync GitHub first."));
+    apiFetch(`/api/workspaces/${selected}/ai/review-summaries`).then(response => response.ok ? response.json() : Promise.reject()).then(setReviewHistory).catch(() => setReviewHistory([]));
   }, [selected]);
 
   async function verify(id: string) {
     setVerifying(id); setMessage("");
     try {
-      const response = await fetch(`/api/workspaces/${selected}/pull-requests/${id}/verify`, { method: "POST" });
+    const response = await apiFetch(`/api/workspaces/${selected}/pull-requests/${id}/verify`, { method: "POST" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Verification failed");
       setPullRequests(items => items.map(item => item.id === id ? { ...item, verificationStatus: data.status } : item));
@@ -46,7 +47,7 @@ export default function PullRequestsPage() {
   async function generateSummary(pr: PullRequest) {
     setAiLoading(pr.id); setMessage("");
     try {
-      const response = await fetch(`/api/workspaces/${selected}/ai/review-summary`, {
+      const response = await apiFetch(`/api/workspaces/${selected}/ai/review-summary`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: pr.title, context: `${pr.repository} #${pr.number}\nAuthor: ${pr.author}\nState: ${pr.state}\nVerification: ${pr.verificationStatus}` })
       });

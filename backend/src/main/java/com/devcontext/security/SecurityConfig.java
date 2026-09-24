@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 public class SecurityConfig {
@@ -36,7 +37,10 @@ public class SecurityConfig {
             return http.build();
         }
 
-        http.authorizeHttpRequests(auth -> auth
+        http.csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .ignoringRequestMatchers("/api/webhooks/**"))
+                .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health", "/actuator/info", "/oauth2/**", "/login/**", "/api/webhooks/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(login -> login
