@@ -5,6 +5,7 @@ import com.devcontext.integration.github.ConnectedRepositoryRepository;
 import com.devcontext.integration.github.PullRequestRecord;
 import com.devcontext.integration.github.PullRequestRecordRepository;
 import com.devcontext.memory.EngineeringMemoryRepository;
+import com.devcontext.incident.IncidentRepository;
 import com.devcontext.workspace.WorkspaceAccessService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +28,7 @@ class WorkspaceDashboardControllerTest {
     @Mock ConnectedRepositoryRepository repositories;
     @Mock PullRequestRecordRepository pullRequests;
     @Mock EngineeringMemoryRepository memories;
+    @Mock IncidentRepository incidents;
 
     @Test
     void buildsMetricsFromWorkspaceData() {
@@ -36,8 +38,9 @@ class WorkspaceDashboardControllerTest {
         when(repositories.findAllByWorkspaceIdOrderByFullName(workspaceId)).thenReturn(List.of(repository));
         when(pullRequests.findAllByRepositoryIdOrderByUpdatedAtDesc(repository.getId())).thenReturn(List.of(pr));
         when(memories.findAllByWorkspaceIdOrderByCreatedAtDesc(workspaceId)).thenReturn(List.of());
+        when(incidents.countByWorkspaceIdAndStatusIn(workspaceId, List.of("OPEN", "ACKNOWLEDGED"))).thenReturn(0L);
 
-        var result = new WorkspaceDashboardController(access, repositories, pullRequests, memories).dashboard(workspaceId,
+        var result = new WorkspaceDashboardController(access, repositories, pullRequests, memories, incidents).dashboard(workspaceId,
                 new UsernamePasswordAuthenticationToken("dev@example.com", "n/a", List.of()));
 
         assertThat(result.metrics().openPullRequests()).isEqualTo(1);

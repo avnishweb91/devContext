@@ -4,6 +4,7 @@ import com.devcontext.integration.github.ConnectedRepository;
 import com.devcontext.integration.github.ConnectedRepositoryRepository;
 import com.devcontext.integration.github.PullRequestRecord;
 import com.devcontext.integration.github.PullRequestRecordRepository;
+import com.devcontext.incident.IncidentRepository;
 import com.devcontext.memory.EngineeringMemory;
 import com.devcontext.memory.EngineeringMemoryRepository;
 import com.devcontext.workspace.WorkspaceAccessService;
@@ -24,13 +25,16 @@ public class WorkspaceDashboardController {
     private final ConnectedRepositoryRepository repositories;
     private final PullRequestRecordRepository pullRequests;
     private final EngineeringMemoryRepository memories;
+    private final IncidentRepository incidents;
 
     public WorkspaceDashboardController(WorkspaceAccessService access, ConnectedRepositoryRepository repositories,
-                                        PullRequestRecordRepository pullRequests, EngineeringMemoryRepository memories) {
+                                        PullRequestRecordRepository pullRequests, EngineeringMemoryRepository memories,
+                                        IncidentRepository incidents) {
         this.access = access;
         this.repositories = repositories;
         this.pullRequests = pullRequests;
         this.memories = memories;
+        this.incidents = incidents;
     }
 
     @GetMapping
@@ -46,7 +50,8 @@ public class WorkspaceDashboardController {
         int open = (int) prViews.stream().filter(pr -> "open".equalsIgnoreCase(pr.state())).count();
         int pending = (int) prViews.stream().filter(pr -> "PENDING".equals(pr.verificationStatus())).count();
         int coverage = connected.isEmpty() ? 0 : Math.min(100, (int) Math.round((workspaceMemories.size() * 100.0) / Math.max(1, connected.size())));
-        return new Dashboard(new Metrics(open, coverage, pending, 0), prViews,
+        int activeIncidents = (int) incidents.countByWorkspaceIdAndStatusIn(workspaceId, List.of("OPEN", "ACKNOWLEDGED"));
+        return new Dashboard(new Metrics(open, coverage, pending, activeIncidents), prViews,
                 workspaceMemories.stream().limit(10).map(this::memory).toList(), Instant.now());
     }
 

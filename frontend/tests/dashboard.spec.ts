@@ -53,3 +53,10 @@ test("retries a failed GitHub synchronization", async ({ page }) => {
   await page.getByRole("button", { name: "Retry failed sync" }).click();
   await expect(page.getByText("GitHub retry queued. Run sync again shortly to read its status.")).toBeVisible();
 });
+
+test("renders the incident management workflow", async ({ page }) => {
+  await page.goto("/incidents");
+  await expect(page.getByRole("heading", { name: "Incidents" })).toBeVisible();
+  await expect(page.getByPlaceholder("Incident title")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Create incident" })).toBeVisible();
+});
