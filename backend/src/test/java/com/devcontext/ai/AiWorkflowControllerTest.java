@@ -19,12 +19,14 @@ import static org.mockito.Mockito.when;
 class AiWorkflowControllerTest {
     @Mock WorkspaceAccessService access;
     @Mock AiWorkflowService ai;
+    @Mock AiReviewRecordRepository reviews;
 
     @Test
     void createsWorkspaceScopedReviewSummary() {
         UUID workspaceId = UUID.randomUUID();
         when(ai.summarize("Rate limit change", "Tests cover the retry path.")).thenReturn("Risk is low; verify rollback evidence.");
-        AiWorkflowController controller = new AiWorkflowController(access, ai);
+        when(reviews.save(any(AiReviewRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        AiWorkflowController controller = new AiWorkflowController(access, ai, reviews);
 
         var result = controller.reviewSummary(workspaceId,
                 new AiWorkflowController.ReviewRequest("Rate limit change", "Tests cover the retry path."),
@@ -33,5 +35,6 @@ class AiWorkflowControllerTest {
         assertThat(result.summary()).contains("Risk is low");
         verify(access).requireMember(eq(workspaceId), any());
         verify(ai).summarize("Rate limit change", "Tests cover the retry path.");
+        verify(reviews).save(any(AiReviewRecord.class));
     }
 }

@@ -9,7 +9,7 @@ DevContext is an engineering context and release-verification platform for devel
 - PostgreSQL persistence with Flyway migrations
 - OAuth authentication and workspace-scoped authorization
 - GitHub sync jobs, signed webhooks, Jira/Slack OAuth profiles, provider discovery, and idempotent Jira/Slack context sync
-- Pull-request verification, engineering memory, team invitations, and AI review summaries
+- Pull-request verification, engineering memory, team invitations, and persisted AI review summaries
 - Actuator health/metrics, request correlation IDs, Docker/Railway deployment
 
 ## Run locally
@@ -111,6 +111,7 @@ POST /api/workspaces/{workspaceId}/integrations/jira/sync
 POST /api/workspaces/{workspaceId}/integrations/slack/sync
 POST /api/workspaces/{workspaceId}/pull-requests/{pullRequestId}/verify
 POST /api/workspaces/{workspaceId}/ai/review-summary
+GET  /api/workspaces/{workspaceId}/ai/review-summaries
 ```
 
 Jira sync imports accessible projects and Slack sync imports active channels as workspace-scoped engineering-memory records. Repeating either request is safe: records with the same provider source URL are not duplicated.

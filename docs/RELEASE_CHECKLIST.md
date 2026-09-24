@@ -12,6 +12,7 @@
 - [ ] Invitation tokens expire, are single-use, and require matching identity email.
 - [ ] GitHub webhook signatures reject invalid requests.
 - [ ] AI provider absence returns a safe configuration error; provider failures do not leak secrets.
+- [ ] AI review history is visible only within the requesting workspace and stores a context digest rather than raw prompt context.
 - [ ] `/actuator/health` and `/actuator/prometheus` are reachable according to the monitoring policy.
 
 ## Beta gate
