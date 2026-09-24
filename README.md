@@ -2,12 +2,15 @@
 
 DevContext is an engineering context and release-verification platform for developers, QA, DevOps, and engineering leads.
 
-## Initial architecture
+## Architecture
 
 - `frontend`: Next.js + TypeScript dashboard
 - `backend`: Spring Boot 3 + Java 17 REST API
-- PostgreSQL-ready persistence boundary
-- Integration-ready modules for GitHub, Jira, Slack, CI/CD, and incidents
+- PostgreSQL persistence with Flyway migrations
+- OAuth authentication and workspace-scoped authorization
+- GitHub sync jobs, signed webhooks, Jira/Slack OAuth profiles, and provider discovery
+- Pull-request verification, engineering memory, team invitations, and AI review summaries
+- Actuator health/metrics, request correlation IDs, Docker/Railway deployment
 
 ## Run locally
 
@@ -30,7 +33,7 @@ npm run dev
 
 The dashboard runs at `http://localhost:3000`.
 
-The first slice uses demo data so the product can be reviewed before connecting GitHub, Jira, and Slack credentials.
+The dashboard still includes presentation-oriented demo cards, while integration, workspace, memory, invitation, verification, and AI endpoints use persisted backend data when configured.
 
 ## Quality gates
 
@@ -94,8 +97,20 @@ SLACK_CLIENT_SECRET=...
 
 The configured OAuth providers are exposed by `GET /api/integrations/providers` and can be started through `/oauth2/authorization/{provider}`.
 
-After sign-in, the first real integration endpoint is:
+After sign-in, useful integration endpoints include:
 
 ```text
 GET /api/integrations/github/repositories
 ```
+
+```text
+GET  /api/integrations/providers
+POST /api/integrations/github/workspaces/{workspaceId}/sync
+GET  /api/integrations/github/workspaces/{workspaceId}/sync-jobs/{jobId}
+POST /api/workspaces/{workspaceId}/pull-requests/{pullRequestId}/verify
+POST /api/workspaces/{workspaceId}/ai/review-summary
+```
+
+### Release checklist
+
+Before alpha, run `mvn test`, `npm run build`, and `npm run test:e2e`; verify OAuth callbacks, Flyway migrations, workspace isolation, invitation acceptance, webhook signatures, and health probes in staging. Before beta, complete a real-company pilot, restore/rollback drill, security review, provider failure tests, and monitored error-rate review. Do not enable production AI or provider credentials until secrets are stored in the deployment secret manager.
