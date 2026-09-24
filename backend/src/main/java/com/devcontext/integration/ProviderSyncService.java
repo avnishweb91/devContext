@@ -92,12 +92,27 @@ public class ProviderSyncService {
         String siteName = resource.path("name").asText("Jira site");
         JsonNode projects = get("https://api.atlassian.com/ex/jira/" + cloudId + "/rest/api/3/project/search?maxResults=100", token);
         List<EngineeringMemory> result = new ArrayList<>();
+        String siteUrl = resource.path("url").asText("https://" + siteName);
         for (JsonNode project : projects.path("values")) {
             String key = project.path("key").asText();
             String name = project.path("name").asText(key);
             result.add(new EngineeringMemory(workspaceId, "Jira project: " + name, "jira",
                     "Project " + key + " is available in " + siteName + " for engineering planning and delivery context.",
-                    "https://api.atlassian.com/ex/jira/" + cloudId + "/projects/" + key));
+                    siteUrl + "/plugins/servlet/project-config/" + key));
+            if (key.isBlank()) continue;
+            JsonNode issues = get("https://api.atlassian.com/ex/jira/" + cloudId
+                    + "/rest/api/3/search?jql=project%3D" + key + "%20ORDER%20BY%20updated%20DESC&maxResults=50&fields=summary,status,description,updated", token);
+            for (JsonNode issue : issues.path("issues")) {
+                String issueKey = issue.path("key").asText();
+                if (issueKey.isBlank()) continue;
+                JsonNode fields = issue.path("fields");
+                String summary = fields.path("summary").asText(issueKey);
+                String status = fields.path("status").path("name").asText("Unknown");
+                String description = flattenJiraText(fields.path("description"));
+                String content = "Status: " + status + ". " + (description.isBlank() ? "No description provided." : description);
+                result.add(new EngineeringMemory(workspaceId, "Jira " + issueKey + ": " + summary, "jira", content,
+                        siteUrl + "/browse/" + issueKey));
+            }
         }
         return result;
     }
@@ -106,6 +121,7 @@ public class ProviderSyncService {
         JsonNode channels = get("https://slack.com/api/conversations.list?limit=100&exclude_archived=true", token);
         if (!channels.path("ok").asBoolean(false)) throw new IllegalStateException(channels.path("error").asText("Slack API error"));
         List<EngineeringMemory> result = new ArrayList<>();
+        int channelCount = 0;
         for (JsonNode channel : channels.path("channels")) {
             String name = channel.path("name").asText();
             if (name.isBlank()) continue;
@@ -113,8 +129,46 @@ public class ProviderSyncService {
             result.add(new EngineeringMemory(workspaceId, "Slack channel: #" + name, "slack",
                     "Shared engineering channel #" + name + " is available for team context and operational follow-up.",
                     id.isBlank() ? null : "slack://channel/" + id));
+            if (id.isBlank() || channelCount++ >= 20) continue;
+            JsonNode history = get("https://slack.com/api/conversations.history?channel=" + id + "&limit=50", token);
+            if (!history.path("ok").asBoolean(false)) continue;
+            for (JsonNode message : history.path("messages")) {
+                String text = message.path("text").asText("").trim();
+                String timestamp = message.path("ts").asText();
+                if (text.isBlank() || timestamp.isBlank()) continue;
+                result.add(new EngineeringMemory(workspaceId, "Slack #" + name + " message", "slack", text,
+                        "slack://channel/" + id + "/message/" + timestamp));
+            }
         }
         return result;
+    }
+
+    private String flattenJiraText(JsonNode node) {
+        if (node == null || node.isNull()) return "";
+        if (node.isTextual()) return node.asText();
+        if (node.isArray()) {
+            StringBuilder result = new StringBuilder();
+            node.forEach(child -> {
+                String value = flattenJiraText(child);
+                if (!value.isBlank()) {
+                    if (result.length() > 0) result.append(' ');
+                    result.append(value);
+                }
+            });
+            return result.toString();
+        }
+        if (node.isObject()) {
+            StringBuilder result = new StringBuilder();
+            node.fields().forEachRemaining(entry -> {
+                String value = flattenJiraText(entry.getValue());
+                if (!value.isBlank() && !entry.getKey().equals("type") && !entry.getKey().equals("version")) {
+                    if (result.length() > 0) result.append(' ');
+                    result.append(value);
+                }
+            });
+            return result.toString();
+        }
+        return node.asText("");
     }
 
     private JsonNode get(String uri, String token) throws Exception {

@@ -128,7 +128,7 @@ POST /api/workspaces/{workspaceId}/incidents
 POST /api/workspaces/{workspaceId}/incidents/{incidentId}/status
 ```
 
-Jira sync imports accessible projects and Slack sync imports active channels as workspace-scoped engineering-memory records. Repeating either request is safe: records with the same provider source URL are not duplicated.
+Jira sync imports accessible projects and recent issues, while Slack sync imports active channels and recent messages as workspace-scoped engineering-memory records. Repeating either request is safe: records with the same provider source URL are not duplicated. Slack apps must request channel/group history scopes for message import.
 
 ### Release checklist
 
