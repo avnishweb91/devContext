@@ -30,4 +30,21 @@ class GitHubSyncServiceTest {
         verify(jobs).save(any(GitHubSyncJob.class));
         verify(worker).synchronize(result.getId(), workspaceId, "github-user");
     }
+
+    @Test
+    void retriesOnlyFailedJobsInTheSameWorkspace() {
+        UUID workspaceId = UUID.randomUUID();
+        GitHubSyncJob failed = new GitHubSyncJob(workspaceId, "github-user");
+        failed.start();
+        failed.fail("provider timeout");
+        when(jobs.findById(failed.getId())).thenReturn(java.util.Optional.of(failed));
+        GitHubSyncJob retry = new GitHubSyncJob(workspaceId, "github-user");
+        when(jobs.save(any(GitHubSyncJob.class))).thenReturn(retry);
+        GitHubSyncService service = new GitHubSyncService(jobs, worker);
+
+        GitHubSyncJob result = service.retry(workspaceId, failed.getId(), "github-user");
+
+        assertThat(result.getStatus()).isEqualTo("PENDING");
+        verify(worker).synchronize(result.getId(), workspaceId, "github-user");
+    }
 }

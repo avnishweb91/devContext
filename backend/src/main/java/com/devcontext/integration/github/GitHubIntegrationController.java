@@ -63,6 +63,14 @@ public class GitHubIntegrationController {
         return new SyncResult(job.getId(), job.getRepositories(), job.getPullRequests(), job.getStatus());
     }
 
+    @PostMapping("/workspaces/{workspaceId}/sync-jobs/{jobId}/retry")
+    public SyncResult retry(@PathVariable UUID workspaceId, @PathVariable UUID jobId, Authentication authentication) {
+        access.requireMember(workspaceId, authentication);
+        authorizedClient(authentication);
+        GitHubSyncJob job = syncService.retry(workspaceId, jobId, authentication.getName());
+        return new SyncResult(job.getId(), 0, 0, job.getStatus());
+    }
+
     private OAuth2AuthorizedClient authorizedClient(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sign in with GitHub first");
