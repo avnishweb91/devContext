@@ -24,6 +24,7 @@ export default function Home() {
   const [liveMetrics, setLiveMetrics] = useState<LiveMetrics | null>(null);
   const [livePullRequests, setLivePullRequests] = useState<LivePullRequest[]>([]);
   const [liveMemories, setLiveMemories] = useState<LiveMemory[]>([]);
+  const [liveWorkspaceId, setLiveWorkspaceId] = useState("");
   useEffect(() => {
     fetch("/api/dashboard")
       .then(response => { if (!response.ok) throw new Error("API unavailable"); return response.json(); })
@@ -35,13 +36,24 @@ export default function Home() {
       .catch(() => setAuthState("anonymous"));
     fetch("/api/workspaces")
       .then(response => response.ok ? response.json() : Promise.reject())
-      .then((workspaces: { id: string }[]) => workspaces[0] && fetch(`/api/workspaces/${workspaces[0].id}/dashboard`))
+      .then((workspaces: { id: string }[]) => { setLiveWorkspaceId(workspaces[0]?.id || ""); return workspaces[0] && fetch(`/api/workspaces/${workspaces[0].id}/dashboard`); })
       .then(response => response && response.ok ? response.json() : Promise.reject())
       .then(data => { setLiveMetrics(data.metrics); setLivePullRequests(data.pullRequests || []); setLiveMemories(data.memories || []); })
       .catch(() => { setLiveMetrics(null); setLivePullRequests([]); setLiveMemories([]); });
   }, []);
   const notify = (text: string) => { setMessage(text); window.setTimeout(() => setMessage(""), 2600); };
-  const runVerification = () => { setRunning(true); fetch("/api/verification/run", { method: "POST" }).then(response => { if (!response.ok) throw new Error("Verification failed"); return response.json(); }).then(result => notify(result.message)).catch(() => notify("The verification service is unavailable")).finally(() => setRunning(false)); };
+  const runVerification = () => {
+    setRunning(true);
+    const request = demoMode
+      ? fetch("/api/verification/run", { method: "POST" })
+      : liveWorkspaceId && livePullRequests[0]
+        ? fetch(`/api/workspaces/${liveWorkspaceId}/pull-requests/${livePullRequests[0].id}/verify`, { method: "POST" })
+        : Promise.reject(new Error("Sync GitHub pull requests before running verification"));
+    request.then(response => { if (!response.ok) throw new Error("Verification failed"); return response.json(); })
+      .then(result => notify(result.message || "Verification recorded for the workspace pull request."))
+      .catch(error => notify(error instanceof Error ? error.message : "The verification service is unavailable"))
+      .finally(() => setRunning(false));
+  };
   const displayedPrs = livePullRequests.length > 0 ? livePullRequests.map(pr => ({ icon: pr.verificationStatus === "VERIFIED" ? CheckCircle2 : AlertTriangle, color: pr.verificationStatus === "VERIFIED" ? "green" : "yellow", title: pr.title, meta: `#${pr.number} · ${pr.repository} · ${pr.author}`, status: pr.verificationStatus.replaceAll("_", " "), detail: pr.state === "open" ? "Workspace pull request awaiting release evidence" : "Persisted pull request record" })) : demoMode ? prs : [];
 
   return <div className="shell">

@@ -114,6 +114,9 @@ POST /api/workspaces/{workspaceId}/integrations/slack/sync
 POST /api/workspaces/{workspaceId}/pull-requests/{pullRequestId}/verify
 POST /api/workspaces/{workspaceId}/ai/review-summary
 GET  /api/workspaces/{workspaceId}/ai/review-summaries
+GET  /api/workspaces/{workspaceId}/incidents
+POST /api/workspaces/{workspaceId}/incidents
+POST /api/workspaces/{workspaceId}/incidents/{incidentId}/status
 ```
 
 Jira sync imports accessible projects and Slack sync imports active channels as workspace-scoped engineering-memory records. Repeating either request is safe: records with the same provider source URL are not duplicated.

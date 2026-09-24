@@ -10,6 +10,7 @@
 - [ ] OAuth callbacks work for every enabled provider.
 - [ ] Jira project and Slack channel sync succeeds with a connected staging account and repeated sync is idempotent.
 - [ ] Workspace A cannot read workspace B data.
+- [ ] Incident creation, acknowledgement, resolution, and active-count aggregation are workspace-scoped.
 - [ ] Invitation tokens expire, are single-use, and require matching identity email.
 - [ ] GitHub webhook signatures reject invalid requests.
 - [ ] AI provider absence returns a safe configuration error; provider failures do not leak secrets.
