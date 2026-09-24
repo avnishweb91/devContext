@@ -28,7 +28,7 @@ public class SecurityConfig {
         }
 
         http.authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health", "/actuator/info", "/oauth2/**", "/login/**").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/info", "/oauth2/**", "/login/**", "/api/webhooks/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(login -> login.defaultSuccessUrl(frontendOrigin + "/onboarding", true))
                 .logout(logout -> logout.logoutSuccessUrl(frontendOrigin))

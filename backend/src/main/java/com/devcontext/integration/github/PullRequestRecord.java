@@ -48,4 +48,12 @@ public class PullRequestRecord {
         this.verificationStatus = status;
         this.updatedAt = Instant.now();
     }
+
+    public void refreshFromWebhook(String title, String authorLogin, String state, String url) {
+        this.title = title;
+        this.authorLogin = authorLogin;
+        this.state = state;
+        this.url = url;
+        this.updatedAt = Instant.now();
+    }
 }

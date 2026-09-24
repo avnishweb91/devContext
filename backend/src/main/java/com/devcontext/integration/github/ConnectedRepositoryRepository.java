@@ -7,5 +7,6 @@ import java.util.UUID;
 
 public interface ConnectedRepositoryRepository extends JpaRepository<ConnectedRepository, UUID> {
     Optional<ConnectedRepository> findByWorkspaceIdAndExternalId(UUID workspaceId, long externalId);
+    List<ConnectedRepository> findAllByExternalId(long externalId);
     List<ConnectedRepository> findAllByWorkspaceIdOrderByFullName(UUID workspaceId);
 }

@@ -26,5 +26,8 @@ devcontext:
     api-key: ${AI_API_KEY:}
     model: ${AI_MODEL:gpt-4o-mini}
     endpoint: ${AI_API_ENDPOINT:https://api.openai.com/v1/chat/completions}
+  integrations:
+    github:
+      webhook-secret: ${GITHUB_WEBHOOK_SECRET:}
   security:
     enabled: ${SECURITY_ENABLED:false}
