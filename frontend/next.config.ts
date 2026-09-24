@@ -8,7 +8,11 @@ const backendUrl = configuredBackendUrl && /^https?:\/\//i.test(configuredBacken
 const nextConfig: NextConfig = {
   output: "standalone",
   async rewrites() {
-    return [{ source: "/api/:path*", destination: `${backendUrl}/api/:path*` }];
+    return [
+      { source: "/api/:path*", destination: `${backendUrl}/api/:path*` },
+      { source: "/oauth2/:path*", destination: `${backendUrl}/oauth2/:path*` },
+      { source: "/login/:path*", destination: `${backendUrl}/login/:path*` },
+    ];
   },
 };
 

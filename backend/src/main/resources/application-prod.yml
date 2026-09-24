@@ -1,4 +1,12 @@
 spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+            scope: read:user,user:email,repo
   datasource:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
@@ -11,3 +19,6 @@ spring:
   flyway:
     enabled: true
 
+devcontext:
+  security:
+    enabled: ${SECURITY_ENABLED:true}

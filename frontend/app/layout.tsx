@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./details.css";
+import "./auth.css";
 
 export const metadata: Metadata = { title: "DevContext", description: "Engineering context and release verification" };
 

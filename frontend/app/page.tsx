@@ -15,19 +15,24 @@ export default function Home() {
   const [message, setMessage] = useState("");
   const [running, setRunning] = useState(false);
   const [apiConnected, setApiConnected] = useState<boolean | null>(null);
+  const [authState, setAuthState] = useState<"loading" | "authenticated" | "anonymous">("loading");
   const [selectedPr, setSelectedPr] = useState<(typeof prs)[number] | null>(null);
   useEffect(() => {
     fetch("/api/dashboard")
       .then(response => { if (!response.ok) throw new Error("API unavailable"); return response.json(); })
       .then(() => setApiConnected(true))
       .catch(() => setApiConnected(false));
+    fetch("/api/auth/me")
+      .then(response => response.json())
+      .then(user => setAuthState(user.authenticated ? "authenticated" : "anonymous"))
+      .catch(() => setAuthState("anonymous"));
   }, []);
   const notify = (text: string) => { setMessage(text); window.setTimeout(() => setMessage(""), 2600); };
   const runVerification = () => { setRunning(true); fetch("/api/verification/run", { method: "POST" }).then(response => { if (!response.ok) throw new Error("Verification failed"); return response.json(); }).then(result => notify(result.message)).catch(() => notify("The verification service is unavailable")).finally(() => setRunning(false)); };
 
   return <div className="shell">
     <aside className="sidebar"><div className="brand"><span className="logo">D</span> DevContext</div><div className="label">Workspace</div><nav>{["Overview", "Pull requests", "Decisions", "Incidents", "Integrations"].map((item, index) => <button key={item} className={active === item ? "nav active" : "nav"} onClick={() => { setActive(item); notify(item === "Integrations" ? "Integration settings opened" : `Switched to ${item}`); }}><span>{[<CircleDot key="1" />, <GitPullRequest key="2" />, <Workflow key="3" />, <AlertTriangle key="4" />, <Settings2 key="5" />][index]}</span>{item}</button>)}</nav><hr /><div className="project"><strong>acme-platform</strong>12 repositories · 46 contributors</div><div className="project"><strong>Connected systems</strong>GitHub · Jira · Slack</div></aside>
-    <main><header><div className="crumb">Workspace / <strong>{active}</strong> <span className={apiConnected ? "api-status connected" : apiConnected === false ? "api-status disconnected" : "api-status"}>{apiConnected ? "● API connected" : apiConnected === false ? "● API offline" : "● Connecting"}</span></div><div className="top-actions"><button onClick={() => notify("Search across code, decisions, incidents and docs")}><Search size={16} /></button><button onClick={() => notify("No new notifications")}><Activity size={16} /></button><span className="avatar">AS</span></div></header><section className="content">
+    <main><header><div className="crumb">Workspace / <strong>{active}</strong> <span className={apiConnected ? "api-status connected" : apiConnected === false ? "api-status disconnected" : "api-status"}>{apiConnected ? "● API connected" : apiConnected === false ? "● API offline" : "● Connecting"}</span></div><div className="top-actions"><button onClick={() => notify("Search across code, decisions, incidents and docs")}><Search size={16} /></button><button onClick={() => notify("No new notifications")}><Activity size={16} /></button>{authState === "anonymous" && <a className="auth-button" href="/oauth2/authorization/github">Sign in</a>}<span className="avatar">AS</span></div></header><section className="content">
       <div className="hero"><div><h1>Good morning, Avnish</h1><p>Your engineering context is up to date across 12 repositories.</p></div><button className="primary" onClick={runVerification}><ShieldCheck size={16} />{running ? "Verifying…" : "Run verification"}</button></div>
       <div className="metrics"><Metric label="Open pull requests" value="24" note="↓ 18% from last week" /><Metric label="Context coverage" value="87%" note="↑ 6% this month" /><Metric label="Unverified AI changes" value="7" note="Needs attention" warn /><Metric label="Active incidents" value="2" note="Both assigned" /></div>
       <div className="grid"><Panel title="Pull request verification" action={<div className="tabs">{["All", "Attention"].map(item => <button key={item} className={filter === item ? "selected" : ""} onClick={() => setFilter(item)}>{item}</button>)}</div>}><div className="pr-list">{prs.filter(pr => filter === "All" || pr.color !== "green").map(pr => <button className="pr" key={pr.title} onClick={() => setSelectedPr(pr)}><span className={`pr-icon ${pr.color}`}><pr.icon size={15} /></span><div><strong>{pr.title}</strong><small>{pr.meta}</small></div><span className={`status ${pr.color}`}>{pr.status}</span></button>)}</div></Panel><Panel title="AI change risk" muted="Last 30 days"><div className="risk"><div className="risk-score"><div className="ring"><b>36</b></div><div><strong>Moderate risk</strong><small>7 changes need human evidence before release.</small></div></div><Bar label="Tests added" value="78%" width="78%" /><Bar label="Docs updated" value="64%" width="64%" yellow /><Bar label="Rollback ready" value="91%" width="91%" /></div></Panel></div>
