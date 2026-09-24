@@ -46,6 +46,13 @@ cd backend
 mvn test
 ```
 
+PostgreSQL and Flyway integration test (requires Docker or another Testcontainers-compatible runtime):
+
+```bash
+cd backend
+mvn -Pintegration verify
+```
+
 Frontend end-to-end tests:
 
 ```bash
@@ -55,7 +62,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Before an alpha release, every critical workflow must have a passing unit test, API integration test, and browser test. Beta releases additionally require a real-company pilot, rollback validation, security review, and monitored error rates.
+Before an alpha release, every critical workflow must have a passing unit test, API integration test, PostgreSQL/Flyway integration test, and browser test. Beta releases additionally require a real-company pilot, rollback validation, security review, and monitored error rates.
 
 ## Deployment
 
