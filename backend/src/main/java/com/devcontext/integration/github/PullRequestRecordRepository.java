@@ -9,4 +9,3 @@ public interface PullRequestRecordRepository extends JpaRepository<PullRequestRe
     Optional<PullRequestRecord> findByRepositoryIdAndExternalNumber(UUID repositoryId, int externalNumber);
     List<PullRequestRecord> findAllByRepositoryIdOrderByUpdatedAtDesc(UUID repositoryId);
 }
-

@@ -23,15 +23,20 @@ public class GitHubIntegrationController {
     private final WorkspaceAccessService access;
     private final ConnectedRepositoryRepository repositories;
     private final PullRequestRecordRepository pullRequests;
+    private final GitHubSyncJobRepository jobs;
+    private final GitHubSyncService syncService;
 
     public GitHubIntegrationController(OAuth2AuthorizedClientService authorizedClients, GitHubApiClient github,
                                        WorkspaceAccessService access, ConnectedRepositoryRepository repositories,
-                                       PullRequestRecordRepository pullRequests) {
+                                       PullRequestRecordRepository pullRequests, GitHubSyncJobRepository jobs,
+                                       GitHubSyncService syncService) {
         this.authorizedClients = authorizedClients;
         this.github = github;
         this.access = access;
         this.repositories = repositories;
         this.pullRequests = pullRequests;
+        this.jobs = jobs;
+        this.syncService = syncService;
     }
 
     @GetMapping("/repositories")
@@ -45,22 +50,17 @@ public class GitHubIntegrationController {
     @PostMapping("/workspaces/{workspaceId}/sync")
     public SyncResult sync(@PathVariable UUID workspaceId, Authentication authentication) {
         access.requireMember(workspaceId, authentication);
-        OAuth2AuthorizedClient client = authorizedClient(authentication);
-        int repositoryCount = 0;
-        int pullRequestCount = 0;
-        for (GitHubApiClient.GitHubRepositoryData remote : github.repositories(client)) {
-            ConnectedRepository repository = repositories.findByWorkspaceIdAndExternalId(workspaceId, remote.externalId())
-                    .orElseGet(() -> new ConnectedRepository(workspaceId, remote.externalId(), remote.name(), remote.fullName(), remote.privateRepository(), remote.url()));
-            ConnectedRepository connected = repositories.save(repository);
-            repositoryCount++;
-            for (GitHubApiClient.GitHubPullRequestData remotePr : github.pullRequests(client, remote.fullName())) {
-                PullRequestRecord record = pullRequests.findByRepositoryIdAndExternalNumber(connected.getId(), remotePr.number())
-                        .orElseGet(() -> new PullRequestRecord(connected.getId(), remotePr.number(), remotePr.title(), remotePr.authorLogin(), remotePr.state(), remotePr.url()));
-                pullRequests.save(record);
-                pullRequestCount++;
-            }
-        }
-        return new SyncResult(repositoryCount, pullRequestCount, "completed");
+        authorizedClient(authentication);
+        GitHubSyncJob job = syncService.queue(workspaceId, authentication.getName());
+        return new SyncResult(job.getId(), 0, 0, job.getStatus());
+    }
+
+    @GetMapping("/workspaces/{workspaceId}/sync-jobs/{jobId}")
+    public SyncResult syncStatus(@PathVariable UUID workspaceId, @PathVariable UUID jobId, Authentication authentication) {
+        access.requireMember(workspaceId, authentication);
+        GitHubSyncJob job = jobs.findById(jobId).filter(candidate -> candidate.getWorkspaceId().equals(workspaceId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sync job not found"));
+        return new SyncResult(job.getId(), job.getRepositories(), job.getPullRequests(), job.getStatus());
     }
 
     private OAuth2AuthorizedClient authorizedClient(Authentication authentication) {
@@ -75,5 +75,5 @@ public class GitHubIntegrationController {
     }
 
     public record RepositorySummary(long id, String name, String fullName, boolean privateRepository, String url) {}
-    public record SyncResult(int repositories, int pullRequests, String status) {}
+    public record SyncResult(UUID jobId, int repositories, int pullRequests, String status) {}
 }

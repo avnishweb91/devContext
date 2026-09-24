@@ -9,4 +9,3 @@ public interface ConnectedRepositoryRepository extends JpaRepository<ConnectedRe
     Optional<ConnectedRepository> findByWorkspaceIdAndExternalId(UUID workspaceId, long externalId);
     List<ConnectedRepository> findAllByWorkspaceIdOrderByFullName(UUID workspaceId);
 }
-

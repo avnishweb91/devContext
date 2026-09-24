@@ -6,7 +6,7 @@ import Link from "next/link";
 import "./integrations.css";
 
 type Workspace = { id: string; name: string };
-type SyncResult = { repositories: number; pullRequests: number; status: string };
+type SyncResult = { jobId: string; repositories: number; pullRequests: number; status: string };
 
 export default function IntegrationsPage() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -29,11 +29,18 @@ export default function IntegrationsPage() {
       const response = await fetch(`/api/integrations/github/workspaces/${selected}/sync`, { method: "POST" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "GitHub sync failed");
-      setResult(data);
+      let status = data as SyncResult;
+      for (let attempt = 0; attempt < 30 && (status.status === "PENDING" || status.status === "RUNNING"); attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const statusResponse = await fetch(`/api/integrations/github/workspaces/${selected}/sync-jobs/${status.jobId}`);
+        if (!statusResponse.ok) throw new Error("Unable to read sync status");
+        status = await statusResponse.json();
+      }
+      if (status.status === "FAILED") throw new Error("GitHub synchronization failed");
+      setResult(status);
     } catch (error) { setMessage(error instanceof Error ? error.message : "GitHub sync failed"); }
     finally { setSyncing(false); }
   }
 
   return <main className="integrations-page"><div className="integration-top"><Link href="/">← Back to dashboard</Link><span>DevContext</span></div><section className="integration-card"><div className="integration-icon"><Github size={25} /></div><p className="eyebrow">Workspace integrations</p><h1>Connect your engineering systems</h1><p className="muted">Start with GitHub. DevContext will persist repositories and pull requests inside the selected workspace for verification and engineering memory.</p><div className="provider-row"><div><strong>GitHub</strong><small>Repositories and pull requests</small></div><span className="connected"><CheckCircle2 size={16} /> OAuth ready</span></div>{workspaces.length > 0 && <label className="workspace-select">Workspace<select value={selected} onChange={event => setSelected(event.target.value)}>{workspaces.map(workspace => <option key={workspace.id} value={workspace.id}>{workspace.name}</option>)}</select></label>}{message && <p className="integration-message" role="alert">{message}</p>}{result && <p className="integration-success" role="status"><CheckCircle2 size={16} /> Synced {result.repositories} repositories and {result.pullRequests} pull requests.</p>}<button className="sync-button" onClick={syncGitHub} disabled={syncing || !selected}><RefreshCw size={16} className={syncing ? "spin" : ""} />{syncing ? "Syncing GitHub…" : "Sync GitHub repositories"}</button></section></main>;
 }
-
