@@ -81,3 +81,9 @@ For GitHub OAuth, register this callback URL in the GitHub OAuth App:
 ```text
 https://YOUR-VERCEL-DOMAIN.vercel.app/login/oauth2/code/github
 ```
+
+After sign-in, the first real integration endpoint is:
+
+```text
+GET /api/integrations/github/repositories
+```
