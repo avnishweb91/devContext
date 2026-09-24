@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
+import java.util.List;
 
 @Service
 public class GitHubSyncService {
@@ -17,6 +18,9 @@ public class GitHubSyncService {
     }
 
     public GitHubSyncJob queue(UUID workspaceId, String principalName) {
+        if (jobs.countByWorkspaceIdAndStatusIn(workspaceId, List.of("PENDING", "RUNNING")) > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A GitHub synchronization is already running for this workspace");
+        }
         GitHubSyncJob job = jobs.save(new GitHubSyncJob(workspaceId, principalName));
         worker.synchronize(job.getId(), workspaceId, principalName);
         return job;

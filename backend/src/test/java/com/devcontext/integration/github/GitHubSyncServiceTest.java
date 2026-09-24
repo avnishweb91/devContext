@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ExtendWith(MockitoExtension.class)
 class GitHubSyncServiceTest {
@@ -46,5 +47,16 @@ class GitHubSyncServiceTest {
 
         assertThat(result.getStatus()).isEqualTo("PENDING");
         verify(worker).synchronize(result.getId(), workspaceId, "github-user");
+    }
+
+    @Test
+    void rejectsDuplicateActiveSynchronization() {
+        UUID workspaceId = UUID.randomUUID();
+        when(jobs.countByWorkspaceIdAndStatusIn(workspaceId, java.util.List.of("PENDING", "RUNNING"))).thenReturn(1L);
+        GitHubSyncService service = new GitHubSyncService(jobs, worker);
+
+        assertThatThrownBy(() -> service.queue(workspaceId, "github-user"))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .hasMessageContaining("already running");
     }
 }
