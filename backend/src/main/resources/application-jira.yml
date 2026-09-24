@@ -1,0 +1,17 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          jira:
+            client-id: ${JIRA_CLIENT_ID}
+            client-secret: ${JIRA_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: read:jira-work,read:jira-user,offline_access
+        provider:
+          jira:
+            authorization-uri: https://auth.atlassian.com/authorize
+            token-uri: https://auth.atlassian.com/oauth/token
+            user-info-uri: https://api.atlassian.com/me
+            user-name-attribute: account_id

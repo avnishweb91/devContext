@@ -82,6 +82,18 @@ For GitHub OAuth, register this callback URL in the GitHub OAuth App:
 https://YOUR-VERCEL-DOMAIN.vercel.app/login/oauth2/code/github
 ```
 
+Jira and Slack OAuth are opt-in profiles. Add `jira` and/or `slack` to `SPRING_PROFILES_ACTIVE`, set the matching client credentials, and register the same callback pattern with the provider:
+
+```text
+SPRING_PROFILES_ACTIVE=prod,jira,slack
+JIRA_CLIENT_ID=...
+JIRA_CLIENT_SECRET=...
+SLACK_CLIENT_ID=...
+SLACK_CLIENT_SECRET=...
+```
+
+The configured OAuth providers are exposed by `GET /api/integrations/providers` and can be started through `/oauth2/authorization/{provider}`.
+
 After sign-in, the first real integration endpoint is:
 
 ```text

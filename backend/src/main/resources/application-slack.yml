@@ -1,0 +1,17 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          slack:
+            client-id: ${SLACK_CLIENT_ID}
+            client-secret: ${SLACK_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: identity.basic,channels:read,chat:write
+        provider:
+          slack:
+            authorization-uri: https://slack.com/oauth/v2/authorize
+            token-uri: https://slack.com/api/oauth.v2.access
+            user-info-uri: https://slack.com/api/auth.test
+            user-name-attribute: user_id
