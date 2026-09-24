@@ -30,14 +30,13 @@ public class IntegrationProviderController {
     @GetMapping("/{provider}/connect")
     public void connect(@PathVariable String provider, Authentication authentication, HttpServletRequest request,
                         HttpServletResponse response) throws IOException {
-        access.identityEmail(authentication);
+        String email = access.identityEmail(authentication);
         String id = provider.toLowerCase(java.util.Locale.ROOT);
         if (!Set.of("jira", "slack").contains(id) || registrations.getIfAvailable() == null
                 || registrations.getIfAvailable().findByRegistrationId(id) == null) {
             response.sendError(404, "Integration provider is not configured");
             return;
         }
-        String email = access.identityEmail(authentication);
         request.getSession().setAttribute("devcontext.oauth.link.email", email);
         response.sendRedirect("/oauth2/authorization/" + id);
     }
