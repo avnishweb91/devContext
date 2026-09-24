@@ -26,8 +26,7 @@ export default function Home() {
   const [liveMemories, setLiveMemories] = useState<LiveMemory[]>([]);
   const [liveWorkspaceId, setLiveWorkspaceId] = useState("");
   useEffect(() => {
-    fetch("/api/dashboard")
-      .then(response => { if (!response.ok) throw new Error("API unavailable"); return response.json(); })
+    fetch("/api/workspaces")
       .then(() => setApiConnected(true))
       .catch(() => setApiConnected(false));
     fetch("/api/auth/me")

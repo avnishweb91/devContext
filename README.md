@@ -35,6 +35,8 @@ The dashboard runs at `http://localhost:3000`.
 
 The dashboard still includes presentation-oriented demo cards, while integration, workspace, memory, invitation, verification, and AI endpoints use persisted backend data when configured.
 
+The presentation-only `/api/dashboard` and `/api/verification/run` endpoints are available only outside the `prod` Spring profile; production uses workspace-scoped APIs.
+
 ## Quality gates
 
 Backend unit/API tests:

@@ -4,11 +4,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.context.annotation.Profile;
 
 import java.time.Instant;
 import java.util.List;
 
 @RestController
+@Profile("!prod")
 @RequestMapping("/api")
 public class DashboardController {
 
@@ -43,4 +45,3 @@ public class DashboardController {
     public record Risk(int score, int testsAdded, int docsUpdated, int rollbackReady) {}
     public record VerificationResult(String status, int reviewItems, String message, Instant completedAt) {}
 }
-
