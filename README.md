@@ -31,3 +31,23 @@ npm run dev
 The dashboard runs at `http://localhost:3000`.
 
 The first slice uses demo data so the product can be reviewed before connecting GitHub, Jira, and Slack credentials.
+
+## Deployment
+
+### Vercel frontend
+
+Create a Vercel project from this repository and set **Root Directory** to `frontend`. Use the default Next.js framework settings. Add:
+
+```text
+BACKEND_URL=https://YOUR-RAILWAY-BACKEND.up.railway.app
+```
+
+### Railway backend
+
+Create a Railway service from this repository and set **Root Directory** to `backend`. Railway will use `backend/Dockerfile`. Add:
+
+```text
+FRONTEND_ORIGIN=https://YOUR-VERCEL-DOMAIN.vercel.app
+```
+
+The backend health check is `/actuator/health`.
