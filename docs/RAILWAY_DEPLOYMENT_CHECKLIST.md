@@ -69,10 +69,10 @@ If Railway logs show Flyway or PostgreSQL errors, fix the database variables fir
 
 ## OAuth callback URLs
 
-Register the GitHub OAuth callback against the Vercel origin, not the Railway origin:
+Register the GitHub OAuth callback against the Railway backend origin. Vercel proxies the authorization request, but Spring completes the callback on Railway:
 
 ```text
-https://YOUR-VERCEL-DOMAIN.vercel.app/login/oauth2/code/github
+https://YOUR-RAILWAY-DOMAIN.up.railway.app/login/oauth2/code/github
 ```
 
 Jira and Slack use the same callback pattern for their provider paths as described in the main README.
