@@ -32,6 +32,26 @@ The dashboard runs at `http://localhost:3000`.
 
 The first slice uses demo data so the product can be reviewed before connecting GitHub, Jira, and Slack credentials.
 
+## Quality gates
+
+Backend unit/API tests:
+
+```bash
+cd backend
+mvn test
+```
+
+Frontend end-to-end tests:
+
+```bash
+cd frontend
+npm install
+npx playwright install chromium
+npm run test:e2e
+```
+
+Before an alpha release, every critical workflow must have a passing unit test, API integration test, and browser test. Beta releases additionally require a real-company pilot, rollback validation, security review, and monitored error rates.
+
 ## Deployment
 
 ### Vercel frontend
