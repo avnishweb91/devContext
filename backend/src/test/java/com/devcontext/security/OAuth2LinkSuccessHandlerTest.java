@@ -20,6 +20,10 @@ import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.devcontext.workspace.AppUser;
+import com.devcontext.workspace.AppUserRepository;
+import com.devcontext.workspace.WorkspaceMembership;
+import com.devcontext.workspace.WorkspaceMembershipRepository;
 
 import java.time.Instant;
 import java.util.List;
@@ -27,12 +31,15 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.eq;
 
 @ExtendWith(MockitoExtension.class)
 class OAuth2LinkSuccessHandlerTest {
     @Mock ObjectProvider<OAuth2AuthorizedClientService> clients;
     @Mock ObjectProvider<ClientRegistrationRepository> repositories;
     @Mock OAuth2AuthorizedClientService clientService;
+    @Mock AppUserRepository users;
+    @Mock WorkspaceMembershipRepository memberships;
 
     @AfterEach
     void clearSecurityContext() { SecurityContextHolder.clearContext(); }
@@ -59,7 +66,7 @@ class OAuth2LinkSuccessHandlerTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.getSession().setAttribute("devcontext.oauth.link.email", "owner@acme.test");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        new OAuth2LinkSuccessHandler(clients, repositories, "https://app.example")
+        new OAuth2LinkSuccessHandler(clients, repositories, users, memberships, "https://app.example")
                 .onAuthenticationSuccess(request, response, authentication);
 
         assertThat(response.getRedirectedUrl()).isEqualTo("https://app.example/integrations");
@@ -76,10 +83,28 @@ class OAuth2LinkSuccessHandlerTest {
         request.getSession().setAttribute("devcontext.oauth.link.email", "old@acme.test");
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        new OAuth2LinkSuccessHandler(clients, repositories, "https://app.example")
+        new OAuth2LinkSuccessHandler(clients, repositories, users, memberships, "https://app.example")
                 .onAuthenticationSuccess(request, response, authentication);
 
         assertThat(request.getSession().getAttribute("devcontext.oauth.link.email")).isNull();
         assertThat(response.getRedirectedUrl()).isEqualTo("https://app.example/onboarding");
+    }
+
+    @Test
+    void sendsExistingGithubMemberToDashboard() throws Exception {
+        OAuth2User user = mock(OAuth2User.class);
+        when(user.getAttribute("email")).thenReturn("owner@acme.test");
+        OAuth2AuthenticationToken authentication = new OAuth2AuthenticationToken(user, List.of(), "github");
+        AppUser existing = new AppUser("owner@acme.test", "Owner");
+        when(users.findByEmailIgnoreCase("owner@acme.test")).thenReturn(java.util.Optional.of(existing));
+        when(memberships.findAllByUserId(eq(existing.getId()))).thenReturn(List.of(
+                new WorkspaceMembership(java.util.UUID.randomUUID(), existing.getId(), WorkspaceMembership.Role.OWNER)));
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        new OAuth2LinkSuccessHandler(clients, repositories, users, memberships, "https://app.example")
+                .onAuthenticationSuccess(request, response, authentication);
+
+        assertThat(response.getRedirectedUrl()).isEqualTo("https://app.example/");
     }
 }

@@ -18,21 +18,30 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import com.devcontext.workspace.AppUser;
+import com.devcontext.workspace.AppUserRepository;
+import com.devcontext.workspace.WorkspaceMembershipRepository;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class OAuth2LinkSuccessHandler implements AuthenticationSuccessHandler {
     private static final String LINK_EMAIL = "devcontext.oauth.link.email";
     private final ObjectProvider<OAuth2AuthorizedClientService> authorizedClients;
     private final ObjectProvider<ClientRegistrationRepository> registrations;
+    private final AppUserRepository users;
+    private final WorkspaceMembershipRepository memberships;
     private final String frontendOrigin;
 
     public OAuth2LinkSuccessHandler(ObjectProvider<OAuth2AuthorizedClientService> authorizedClients, ObjectProvider<ClientRegistrationRepository> registrations,
+                                    AppUserRepository users, WorkspaceMembershipRepository memberships,
                                     @Value("${devcontext.frontend-origin:http://localhost:3000}") String frontendOrigin) {
         this.authorizedClients = authorizedClients;
         this.registrations = registrations;
+        this.users = users;
+        this.memberships = memberships;
         this.frontendOrigin = frontendOrigin;
     }
 
@@ -66,6 +75,18 @@ public class OAuth2LinkSuccessHandler implements AuthenticationSuccessHandler {
             response.sendRedirect(frontendOrigin + "/integrations");
             return;
         }
-        response.sendRedirect(frontendOrigin + "/onboarding");
+        response.sendRedirect(frontendOrigin + (hasWorkspaceMembership(authentication) ? "/" : "/onboarding"));
+    }
+
+    private boolean hasWorkspaceMembership(Authentication authentication) {
+        if (!(authentication.getPrincipal() instanceof OAuth2User oauthUser)) return false;
+        Object emailAttribute = oauthUser.getAttribute("email");
+        if (!(emailAttribute instanceof String email) || email.isBlank()) return false;
+        Optional<AppUser> user = Optional.ofNullable(users.findByEmailIgnoreCase(email.trim()))
+                .orElse(Optional.empty());
+        return user.map(AppUser::getId)
+                .map(memberships::findAllByUserId)
+                .map(found -> found != null && !found.isEmpty())
+                .orElse(false);
     }
 }
