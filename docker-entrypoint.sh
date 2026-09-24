@@ -13,6 +13,15 @@ if [ -z "$database_url" ] && [ -n "${DATABASE_URL:-}" ]; then
   esac
 fi
 
+case ",${SPRING_PROFILES_ACTIVE:-prod}," in
+  *,prod,*)
+    if [ -z "$database_url" ] && { [ -z "${PGHOST:-}" ] || [ -z "${PGPORT:-}" ] || [ -z "${PGDATABASE:-}" ] || [ -z "${PGUSER:-}" ] || [ -z "${PGPASSWORD:-}" ]; }; then
+      echo "Production requires DATABASE_JDBC_URL/DATABASE_URL or complete PGHOST, PGPORT, PGDATABASE, PGUSER, and PGPASSWORD variables." >&2
+      exit 78
+    fi
+    ;;
+esac
+
 if [ -n "$database_url" ]; then
   set -- "-Dspring.datasource.url=$database_url" "$@"
 fi
