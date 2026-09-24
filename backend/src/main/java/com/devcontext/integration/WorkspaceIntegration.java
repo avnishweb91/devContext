@@ -17,6 +17,8 @@ public class WorkspaceIntegration {
     @Column(nullable = false, length = 30) private String status;
     @Column(length = 180) private String externalAccountId;
     @Column(nullable = false) private Instant createdAt;
+    @Column private Instant lastSyncedAt;
+    @Column(length = 1000) private String lastSyncError;
 
     protected WorkspaceIntegration() {}
 
@@ -32,6 +34,18 @@ public class WorkspaceIntegration {
     public void connect(String status, String externalAccountId) {
         this.status = status;
         this.externalAccountId = externalAccountId;
+        this.lastSyncError = null;
+    }
+
+    public void markSynced(Instant syncedAt) {
+        this.status = "CONNECTED";
+        this.lastSyncedAt = syncedAt;
+        this.lastSyncError = null;
+    }
+
+    public void markSyncFailed(String error) {
+        this.status = "SYNC_ERROR";
+        this.lastSyncError = error == null ? "Provider sync failed" : error.substring(0, Math.min(error.length(), 1000));
     }
 
     public UUID getId() { return id; }
@@ -40,4 +54,6 @@ public class WorkspaceIntegration {
     public String getStatus() { return status; }
     public String getExternalAccountId() { return externalAccountId; }
     public Instant getCreatedAt() { return createdAt; }
+    public Instant getLastSyncedAt() { return lastSyncedAt; }
+    public String getLastSyncError() { return lastSyncError; }
 }

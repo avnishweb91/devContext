@@ -1,0 +1,2 @@
+ALTER TABLE integrations ADD COLUMN IF NOT EXISTS last_synced_at TIMESTAMPTZ;
+ALTER TABLE integrations ADD COLUMN IF NOT EXISTS last_sync_error VARCHAR(1000);

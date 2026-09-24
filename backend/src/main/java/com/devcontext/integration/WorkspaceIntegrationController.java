@@ -36,7 +36,7 @@ public class WorkspaceIntegrationController {
     public List<IntegrationSummary> list(@PathVariable UUID workspaceId, Authentication authentication) {
         access.requireMember(workspaceId, authentication);
         return integrations.findAllByWorkspaceIdOrderByProvider(workspaceId).stream()
-                .map(integration -> new IntegrationSummary(integration.getProvider(), integration.getStatus(), integration.getExternalAccountId()))
+                .map(integration -> new IntegrationSummary(integration.getProvider(), integration.getStatus(), integration.getExternalAccountId(), integration.getLastSyncedAt(), integration.getLastSyncError()))
                 .toList();
     }
 
@@ -53,9 +53,9 @@ public class WorkspaceIntegrationController {
                 .orElseGet(() -> new WorkspaceIntegration(workspaceId, provider, "CONNECTED", request.externalAccountId()));
         integration.connect("CONNECTED", request.externalAccountId());
         WorkspaceIntegration saved = integrations.save(integration);
-        return new IntegrationSummary(saved.getProvider(), saved.getStatus(), saved.getExternalAccountId());
+        return new IntegrationSummary(saved.getProvider(), saved.getStatus(), saved.getExternalAccountId(), saved.getLastSyncedAt(), saved.getLastSyncError());
     }
 
     public record ConnectRequest(@NotBlank @Size(max = 40) String provider, @Size(max = 180) String externalAccountId) {}
-    public record IntegrationSummary(String provider, String status, String externalAccountId) {}
+    public record IntegrationSummary(String provider, String status, String externalAccountId, java.time.Instant lastSyncedAt, String lastSyncError) {}
 }
