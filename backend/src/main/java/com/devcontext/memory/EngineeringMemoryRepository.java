@@ -7,4 +7,5 @@ import java.util.UUID;
 
 public interface EngineeringMemoryRepository extends JpaRepository<EngineeringMemory, UUID> {
     List<EngineeringMemory> findAllByWorkspaceIdOrderByCreatedAtDesc(UUID workspaceId);
+    boolean existsByWorkspaceIdAndSourceUrl(UUID workspaceId, String sourceUrl);
 }

@@ -7,6 +7,7 @@
 - [ ] Playwright suite passes against the deployed preview.
 - [ ] Production profile starts against a clean PostgreSQL database and all Flyway migrations complete.
 - [ ] OAuth callbacks work for every enabled provider.
+- [ ] Jira project and Slack channel sync succeeds with a connected staging account and repeated sync is idempotent.
 - [ ] Workspace A cannot read workspace B data.
 - [ ] Invitation tokens expire, are single-use, and require matching identity email.
 - [ ] GitHub webhook signatures reject invalid requests.

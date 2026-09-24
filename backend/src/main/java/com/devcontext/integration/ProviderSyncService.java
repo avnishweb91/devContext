@@ -63,9 +63,12 @@ public class ProviderSyncService {
         WorkspaceIntegration integration = integrations.findByWorkspaceIdAndProvider(workspaceId, provider)
                 .orElseGet(() -> new WorkspaceIntegration(workspaceId, provider, "CONNECTED", null));
         try {
-            List<EngineeringMemory> imported = provider.equals("JIRA")
+            List<EngineeringMemory> discovered = provider.equals("JIRA")
                     ? importJira(workspaceId, client.getAccessToken().getTokenValue())
                     : importSlack(workspaceId, client.getAccessToken().getTokenValue());
+            List<EngineeringMemory> imported = discovered.stream()
+                    .filter(memory -> memory.getSourceUrl() == null || !memories.existsByWorkspaceIdAndSourceUrl(workspaceId, memory.getSourceUrl()))
+                    .toList();
             memories.saveAll(imported);
             Instant syncedAt = Instant.now();
             integration.markSynced(syncedAt);
