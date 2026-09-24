@@ -39,3 +39,17 @@ test("renders the pull request review history surface", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Pull requests" })).toBeVisible();
   await expect(page.getByText("Review repository changes, record evidence, and keep each workspace isolated.")).toBeVisible();
 });
+
+test("retries a failed GitHub synchronization", async ({ page }) => {
+  await page.route("**/api/workspaces", route => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([{ id: "workspace-1", name: "Acme" }]) }));
+  await page.route("**/api/integrations/providers", route => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([{ id: "github", name: "GitHub", authorizationPath: "/oauth2/authorization/github" }]) }));
+  await page.route("**/api/integrations/github/workspaces/workspace-1/sync", route => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ jobId: "job-1", repositories: 0, pullRequests: 0, status: "PENDING" }) }));
+  await page.route("**/api/integrations/github/workspaces/workspace-1/sync-jobs/job-1", route => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ jobId: "job-1", repositories: 0, pullRequests: 0, status: "FAILED", errorMessage: "GitHub rate limit" }) }));
+  await page.route("**/api/integrations/github/workspaces/workspace-1/sync-jobs/job-1/retry", route => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ jobId: "job-2", repositories: 0, pullRequests: 0, status: "PENDING" }) }));
+
+  await page.goto("/integrations");
+  await page.getByRole("button", { name: "Sync GitHub repositories" }).click();
+  await expect(page.getByText("GitHub sync failed: GitHub rate limit")).toBeVisible();
+  await page.getByRole("button", { name: "Retry failed sync" }).click();
+  await expect(page.getByText("GitHub retry queued. Run sync again shortly to read its status.")).toBeVisible();
+});
